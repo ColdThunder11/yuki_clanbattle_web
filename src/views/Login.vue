@@ -10,7 +10,7 @@
             <el-input @keyup.enter="onLogin" v-model="login_form.password" show-password></el-input>
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" @click="onLogin">登陆</el-button>
+            <el-button type="primary" @click="onLogin">登录</el-button>
           </el-form-item>
         </el-form>
       </el-main>
@@ -54,7 +54,7 @@ export default {
         })
         .catch((err) => {
           console.log(err);
-          ElMessage.error("登陆失败：网络错误");
+          ElMessage.error("登录失败：网络错误");
         });
     },
   },

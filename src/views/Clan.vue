@@ -53,6 +53,11 @@
                 @keyup.enter="reportRecord"
               ></el-input>
             </el-form-item>
+            <el-form-item label="上报为完整刀" :label-width="formLabelWidth">
+              <el-switch
+                v-model="report_record_form.froce_use_full_chance"
+              ></el-switch>
+            </el-form-item>
             <el-form-item label="代理上报" :label-width="formLabelWidth">
               <el-switch
                 v-model="report_record_form.is_proxy_report"
@@ -169,12 +174,24 @@
                 placeholder="请选择预约的周目"
               >
                 <el-option
-                  v-for="(cycle, o) in Array(100 - boss_status[Number(report_subscribe_form.target_boss)-1].target_cycle)
-                    .fill(boss_status[Number(report_subscribe_form.target_boss)-1].target_cycle)
-                    .map((el, i) => boss_status[Number(report_subscribe_form.target_boss)-1].target_cycle + i)"
+                  v-for="(cycle, o) in Array(
+                    100 -
+                      boss_status[Number(report_subscribe_form.target_boss) - 1]
+                        .target_cycle
+                  )
+                    .fill(
+                      boss_status[Number(report_subscribe_form.target_boss) - 1]
+                        .target_cycle
+                    )
+                    .map(
+                      (el, i) =>
+                        boss_status[
+                          Number(report_subscribe_form.target_boss) - 1
+                        ].target_cycle + i
+                    )"
                   :key="o"
                   :label="cycle + '周目'"
-                  :value="cycle"
+                  :value="cycle+''"
                 ></el-option>
               </el-select>
             </el-form-item>
@@ -194,6 +211,69 @@
               <el-button
                 type="primary"
                 @click="reportSubscribe"
+                :disabled="disable_api_call"
+                >确认</el-button
+              >
+            </span>
+          </template>
+        </el-dialog>
+        <!-- SL选择框 -->
+        <el-dialog
+          v-model="report_sl_dialog_visible"
+          title="上报SL"
+          width="50%"
+        >
+          <el-form :model="report_sl_form">
+            <el-form-item label="Boss" :label-width="formLabelWidth">
+              <el-select
+                v-model="report_sl_form.boss"
+                placeholder="请选择SL的Boss"
+              >
+                <el-option label="1王" value="1"></el-option>
+                <el-option label="2王" value="2"></el-option>
+                <el-option label="3王" value="3"></el-option>
+                <el-option label="4王" value="4"></el-option>
+                <el-option label="5王" value="5"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="代理上报" :label-width="formLabelWidth">
+              <el-switch v-model="report_sl_form.is_proxy_report"></el-switch>
+            </el-form-item>
+            <el-form-item
+              v-if="report_sl_form.is_proxy_report && member_list"
+              label="代理上报成员"
+              :label-width="formLabelWidth"
+            >
+              <el-select
+                v-model="report_sl_form.proxy_report_uid"
+                placeholder="请选择代理上报的成员"
+                filterable
+                clearable
+              >
+                <el-option
+                  v-for="(member, o) in member_list"
+                  :key="o"
+                  :label="member.uname + '(' + member.uid + ')'"
+                  :value="member.uid"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="注释" :label-width="formLabelWidth">
+              <el-input
+                v-model="report_sl_form.comment"
+                autocomplete="off"
+                @keyup.enter="reportSL"
+              ></el-input>
+            </el-form-item>
+          </el-form>
+          <template #footer>
+            <span class="dialog-footer">
+              <el-button @click="report_sl_dialog_visible = false"
+                >取消</el-button
+              >
+              <el-button
+                type="primary"
+                @click="reportSL"
                 :disabled="disable_api_call"
                 >确认</el-button
               >
@@ -254,7 +334,7 @@
                   <div v-if="on_tree_dict" style="margin: 5px 0 0 5px">
                     <div v-if="on_tree_uname_list[parseInt(o)] != '-None'">
                       <p>
-                        {{on_tree_uname_list[parseInt(o)]}}
+                        {{ on_tree_uname_list[parseInt(o)] }}
                       </p>
                     </div>
                   </div>
@@ -283,6 +363,13 @@
                   type="primary"
                   @click="report_subscribe_dialog_visible = true"
                   >预约</el-button
+                >
+              </el-col>
+              <el-col :span="4">
+                <el-button
+                  type="primary"
+                  @click="report_sl_dialog_visible = true"
+                  >上报SL</el-button
                 >
               </el-col>
             </el-row>
@@ -351,16 +438,12 @@
               width="90"
               sortable
             />
-            <el-table-column label="余尾刀" width="65">
-              <template #default="scope">
-                <el-icon
-                  v-if="scope.row.next_is_addition_challeng"
-                  style="margin-left: 15px"
-                >
-                  <check />
-                </el-icon>
-              </template>
-            </el-table-column>
+            <el-table-column
+              prop="remain_addition_challeng"
+              label="余尾刀"
+              width="90"
+              sortable
+            />
             <el-table-column label="已使用SL" width="85">
               <template #default="scope">
                 <el-icon v-if="scope.row.use_sl" style="margin-left: 25px">
@@ -486,18 +569,43 @@
           </el-table>
         </div>
         <div v-if="active_enum_select == 5">
-          <el-form :model="query_record_form" style="margin-top: 10px">
-            <el-form-item>
-              <el-button type="primary" @click="query_record_confirm"
-                >确认</el-button
-              >
-            </el-form-item>
-            <el-form-item>
-              <el-button type="danger" @click="clear_query_record_form"
-                >清空</el-button
-              >
-            </el-form-item>
-          </el-form>
+          <div
+            style="
+              background-color: rgba(255, 255, 255, 0.7) !important;
+              margin-top: 10px;
+            "
+          >
+            <el-row>
+              <el-col :span="4" style="text-align: center; margin-top: 10px">
+                <span style="line-height: 42px">当前会战档案：</span>
+              </el-col>
+              <el-col :span="20" style="margin-top: 10px">
+                <el-select
+                  v-model="current_clanbattle_data"
+                  placeholder="选择当前的会战档案"
+                >
+                  <el-option
+                    v-for="item in 10"
+                    :key="item"
+                    :label="item"
+                    :value="item"
+                  >
+                  </el-option>
+                </el-select>
+              </el-col>
+            </el-row>
+            <el-row style="margin-top: 40px">
+              <el-col :span="19"></el-col>
+              <el-col :span="4">
+                <el-button
+                  type="danger"
+                  @click="logout"
+                  style="margin-bottom: 10px"
+                  >退出登录</el-button
+                >
+              </el-col>
+            </el-row>
+          </div>
         </div>
       </el-main>
     </el-container>
@@ -524,11 +632,13 @@ export default {
       on_tree_dict: null,
       //on_tree_uname_list: [],
       selscted_clan: "",
+      current_clanbattle_data: null,
       disable_api_call: false,
       chose_clan_dialog_visible: false,
       report_record_dialog_visible: false,
       report_queue_dialog_visible: false,
       report_subscribe_dialog_visible: false,
+      report_sl_dialog_visible: false,
       active_sub_enum_select: 1,
       active_enum_select: 1,
       boss_status: null,
@@ -542,6 +652,7 @@ export default {
         target_boss: null,
         damage: null,
         is_kill_boss: false,
+        froce_use_full_chance: false,
         is_proxy_report: false,
         proxy_report_member: null,
         comment: null
@@ -557,6 +668,13 @@ export default {
         target_cycle: null,
         comment: null
       },
+      report_sl_form: {
+        clan_gid: null,
+        boss: null,
+        comment: null,
+        is_proxy_report: false,
+        proxy_report_uid: null,
+      },
       query_record_form: {
         clan_gid: '',
         date: '',
@@ -567,15 +685,15 @@ export default {
     }
   },
   computed: {
-    on_tree_uname_list(){
+    on_tree_uname_list() {
       let list = []
-      if (this.on_tree_dict != null){
-        for(let i=1;i<6;i++){
+      if (this.on_tree_dict != null) {
+        for (let i = 1; i < 6; i++) {
           let name_str = "-None"
-          for(let obj of this.on_tree_dict[i.toString()]){
+          for (let obj of this.on_tree_dict[i.toString()]) {
             name_str += "、" + this.getMemberUname(obj.member_uid)
           }
-          if (name_str != "-None"){
+          if (name_str != "-None") {
             name_str = name_str.substr(6)
             name_str += "还在树上"
           }
@@ -589,8 +707,15 @@ export default {
     selscted_clan(newValue) {
       this.report_record_form.clan_gid = newValue
       this.report_queue_form.clan_gid = newValue
+      this.report_subscribe_form.clan_gid = newValue
       this.query_record_form.clan_gid = newValue
+      this.report_sl_form.clan_gid = newValue
       this.refreshStatus()
+    },
+    current_clanbattle_data(newValue, oldValue) {
+      if (oldValue != null && newValue != oldValue) {
+        this.setClanbattleDataNumber()
+      }
     },
     active_sub_enum_select(newValue) {
       let subscribe_data = []
@@ -712,6 +837,11 @@ export default {
         this.disable_api_call = false
         return
       }
+      if (this.report_record_form.is_proxy_report && !this.report_record_form.proxy_report_member) {
+        ElMessage.error("请选择代理上报的对象");
+        this.disable_api_call = false
+        return
+      }
       axios.post("api/clanbattle/report_record", this.report_record_form)
         .then((resp) => {
           let resp_data = resp.data;
@@ -722,11 +852,12 @@ export default {
             this.refreshStatus();
             this.report_record_dialog_visible = false
             this.report_record_form.target_boss = null
-            this.report_record_form.damage = null,
-              this.report_record_form.is_kill_boss = false,
-              this.report_record_form.is_proxy_report = false,
-              this.report_record_form.proxy_report_member = null,
-              this.report_record_form.comment = null
+            this.report_record_form.damage = null
+            this.report_record_form.is_kill_boss = false
+            this.report_record_form.froce_use_full_chance = false
+            this.report_record_form.is_proxy_report = false
+            this.report_record_form.proxy_report_member = null
+            this.report_record_form.comment = null
           }
           this.disable_api_call = false
         })
@@ -783,6 +914,60 @@ export default {
           this.disable_api_call = false
         });
     },
+    reportSL() {
+      this.disable_api_call = true
+      if (!this.report_sl_form.boss) {
+        ElMessage.error("请选择SL的Boss");
+        this.disable_api_call = false
+        return
+      }
+      if (this.report_sl_form.is_proxy_report && !this.report_sl_form.proxy_report_uid) {
+        ElMessage.error("请选择代理上报的对象");
+        this.disable_api_call = false
+        return
+      }
+      axios.post("api/clanbattle/report_sl", this.report_sl_form)
+        .then((resp) => {
+          let resp_data = resp.data;
+          if (resp_data.err_code != 0) {
+            ElMessage.error(resp_data.msg);
+          } else {
+            ElMessage.success("上报SL成功");
+            this.refreshStatus();
+            this.report_sl_dialog_visible = false
+            this.report_sl_form.boss = null
+            this.report_sl_form.is_proxy_report = false
+            this.report_sl_form.proxy_report_uid = null
+            this.report_sl_form.comment = null
+          }
+          this.disable_api_call = false
+        })
+        .catch((err) => {
+          console.log(err);
+          ElMessage.error("网络错误");
+          this.disable_api_call = false
+        });
+    },
+    setClanbattleDataNumber() {
+      this.disable_api_call = true
+      axios.post("api/clanbattle/change_current_clanbattle_data_num", { clan_gid: this.selscted_clan, data_num: this.current_clanbattle_data })
+        .then((resp) => {
+          let resp_data = resp.data;
+          if (resp_data.err_code != 0) {
+            ElMessage.error(resp_data.msg);
+            this.refreshStatus();
+          } else {
+            ElMessage.success("修改当前公会战档案成功");
+            this.refreshStatus();
+          }
+          this.disable_api_call = false
+        })
+        .catch((err) => {
+          console.log(err);
+          ElMessage.error("网络错误");
+          this.disable_api_call = false
+        });
+    },
     getClanMember() {
       //ElNotification.info("正在获取公会成员信息")
       axios.get("api/clanbattle/member_list", { params: { clan_gid: this.selscted_clan } })
@@ -800,6 +985,7 @@ export default {
             this.getSubscribes()
             this.getOnTree()
             this.getBattleStatus()
+            this.getClanBattleDataNum()
           }
           else this.$router.push("/login")
         })
@@ -861,6 +1047,17 @@ export default {
           ElMessage.error("获取信息失败，请尝试刷新页面");
         })
     },
+    getClanBattleDataNum() {
+      axios.get("api/clanbattle/current_clanbattle_data_num", { params: { clan_gid: this.selscted_clan } })
+        .then((resp) => {
+          if (resp.data.err_code == 0) this.current_clanbattle_data = resp.data.data_num
+          else this.$router.push("/login")
+        })
+        .catch((err) => {
+          console.log(err);
+          ElMessage.error("获取信息失败，请尝试刷新页面");
+        })
+    },
     getFormHeight() {
       this.record_table_height = window.innerHeight - 285.5 + 'px';
       this.status_table_height = window.innerHeight - 213 + 'px';
@@ -901,6 +1098,10 @@ export default {
     disabledDate(time) {
       return time.getTime() > Date.now()
     },
+    logout() {
+      document.cookie = "session=0;expires=-1";
+      this.$router.push("/login")
+    }
   }
 }
 </script>

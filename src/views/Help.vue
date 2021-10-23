@@ -39,12 +39,12 @@ export default {
           description: "修改会战昵称",
         },
         {
-          command: "报刀[1-5](伤害)(:注释)(@某人)",
-          description: "报刀，伤害单位可以使用w,kw,e",
+          command: "报刀(整)[1-5](伤害)(:注释)(@某人)",
+          description: "报刀，伤害单位可以使用w,kw,e，如加上整则强制上报为完整刀，否则优先上报为补偿刀",
         },
         {
-          command: "尾刀[1-5](:注释)(@某人)",
-          description: "收尾刀报刀",
+          command: "尾刀(整)[1-5](:注释)(@某人)",
+          description: "收尾刀报刀，如加上整则强制上报为完整刀，否则优先上报为补偿刀",
         },
         {
           command: "状态",
@@ -69,6 +69,10 @@ export default {
         {
           command: "挂树(伤害)(:注释)(@某人)",
           description: "记录挂树，将在boss被击败时通知",
+        },
+        {
+          command: "查树",
+          description: "查看当前挂树情况",
         },
         {
           command: "预约[1-5] (周目)(:注释)",
@@ -127,7 +131,7 @@ export default {
       return '';
     },
     getHeight() {
-      this.table_height = window.innerHeight - 220 + 'px';
+      this.table_height = window.innerHeight - 184 + 'px';
     },
   }
 };
