@@ -31,6 +31,10 @@ export default {
           description: "加入公会",
         },
         {
+          command: "加入全部成员",
+          description: "将全部成员加入公会（仅会战管理员）",
+        },
+        {
           command: "退出公会",
           description: "退出公会",
         },
@@ -67,7 +71,7 @@ export default {
           description: "查看当前正在出刀的成员",
         },
         {
-          command: "挂树(伤害)(:注释)(@某人)",
+          command: "挂树[1-5](:注释)(@某人)",
           description: "记录挂树，将在boss被击败时通知",
         },
         {
@@ -83,8 +87,12 @@ export default {
           description: "取消预约boss",
         },
         {
-          command: "撤回(@某人)",
-          description: "撤回上次报刀，由于数据库原因仅可撤回最近的一次报刀",
+          command: "预约表",
+          description: "查看预约了当前显示boss的成员",
+        },
+        {
+          command: "撤回[1-5]",
+          description: "撤回上次x王的报刀，仅出刀者/代刀者/会战管理员可以撤回",
         },
         {
           command: "sl[1-5](:注释)(@某人)",
@@ -95,20 +103,36 @@ export default {
           description: "查询sl状态",
         },
         {
-          command: "设置密码[密码]（仅私聊）",
-          description: "设置Web登陆密码",
+          command: "修改进度 [1-5] [周目] [血量]",
+          description: "强制修改Boss状态",
+        },
+        {
+          command: "切换会战档案[1-10]",
+          description: "切换当前会战档案（仅会战管理员）",
+        },
+        {
+          command: "清空当前会战档案",
+          description: "清空当前会战档案会战数据（仅会战管理员）",
+        },
+        {
+          command: "设置密码[密码]",
+          description: "设置Web登陆密码（仅私聊）",
         },
         {
           command: "刷新会战管理员列表",
           description: "刷新会战管理员列表为当前群组管理员",
         },
         {
-          command: "修改公会名称 [新名称]（仅会战管理员）",
-          description: "修改公会名称",
+          command: "添加会战管理员(@某人)",
+          description: "添加新的会战管理员（仅会战管理员）",
         },
         {
-          command: "移出公会 [QQ号]（仅会战管理员）",
-          description: "将指定QQ号移出公会",
+          command: "修改公会名称 [新名称]",
+          description: "修改公会名称（仅会战管理员）",
+        },
+        {
+          command: "移出公会 [QQ号]",
+          description: "将指定QQ号移出公会（仅会战管理员）",
         },
         {
           command: "面板",

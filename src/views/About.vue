@@ -5,10 +5,22 @@
       <p align="left">
         Yuki Clanbattle测试版建设中，建议/反馈/参与测试 联系2561502056备注YukiClanbattle
       </p>
-      <p align="left">当前版本：v0.1.1</p>
+      <p align="left">当前版本：v0.1.3</p>
       <p align="left">
         Change Log: <br />
-        v0.1.1 <br />
+        v0.1.3<br />
+        新增：修改进度指令<br />
+        新增：可以在Web中移除多余的公会成员<br />
+        修正：亿些小bug<br />
+        <br />
+        v0.1.2<br />
+        新增：加入全部成员指令<br />
+        新增：切换和清空会战档案指令<br />
+        新增：Web多公会选择界面<br />
+        改进：性能改进，为大部分查询指令添加了缓存<br />
+        修正：亿些小bug<br />
+        <br />
+        v0.1.1<br />
         修复：可以在无法挑战的Boss上SL和挂树的问题<br />
         修复：退出公会出现错误的问题<br />
         修复：网页预约出现错误的问题<br />

@@ -5,7 +5,10 @@ const routes = [
   {
     path: '/',
     name: 'Home',
-    component: Home
+    component: Home,
+    meta:{
+      title: 'YukiClanbattle'
+    }
   },
   {
     path: '/about',
@@ -13,7 +16,10 @@ const routes = [
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
+    component: () => import(/* webpackChunkName: "about" */ '../views/About.vue'),
+    meta:{
+      title: '关于YukiClanbattle'
+    }
   },
   {
     path: '/clan',
@@ -21,7 +27,10 @@ const routes = [
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/Clan.vue')
+    component: () => import(/* webpackChunkName: "about" */ '../views/Clan.vue'),
+    meta:{
+      title: '会战面板'
+    }
   },
   {
     path: '/help',
@@ -29,7 +38,10 @@ const routes = [
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/Help.vue')
+    component: () => import(/* webpackChunkName: "about" */ '../views/Help.vue'),
+    meta:{
+      title: '会战帮助'
+    }
   },
   {
     path: '/login',
@@ -37,7 +49,10 @@ const routes = [
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/Login.vue')
+    component: () => import(/* webpackChunkName: "about" */ '../views/Login.vue'),
+    meta:{
+      title: '面板登录'
+    }
   }
 ]
 

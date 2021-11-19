@@ -2,20 +2,31 @@
   <div class="common-layout">
     <el-container>
       <el-main>
-        <!-- todo 多公会选择框 -->
+        <!-- 多公会选择框 -->
         <el-dialog
           v-model="chose_clan_dialog_visible"
-          title="Tips"
+          title="选择公会"
           width="30%"
           :before-close="handleChoseClanClose"
         >
-          <span>This is a message</span>
+          <el-select
+            v-model="selscted_clan"
+            placeholder="请选择当前公会"
+            filterable
+          >
+            <el-option
+              v-for="(clan, o) in joined_clan"
+              :key="o"
+              :label="clan"
+              :value="clan"
+            ></el-option>
+          </el-select>
           <template #footer>
             <span class="dialog-footer">
               <el-button
                 type="primary"
                 @click="chose_clan_dialog_visible = false"
-                >Confirm</el-button
+                >确认</el-button
               >
             </span>
           </template>
@@ -191,7 +202,7 @@
                     )"
                   :key="o"
                   :label="cycle + '周目'"
-                  :value="cycle+''"
+                  :value="cycle + ''"
                 ></el-option>
               </el-select>
             </el-form-item>
@@ -280,6 +291,47 @@
             </span>
           </template>
         </el-dialog>
+        <!-- 移除成员选择框 -->
+        <el-dialog
+          v-model="remove_member_dialog_visible"
+          title="移除成员"
+          width="50%"
+        >
+          <el-form :model="remove_member_form">
+            <el-form-item
+              label="移除成员"
+              :label-width="formLabelWidth"
+            >
+              <el-select
+                v-model="remove_member_form.remove_member"
+                placeholder="请选择要移除的成员"
+                filterable
+                clearable
+              >
+                <el-option
+                  v-for="(member, o) in member_list"
+                  :key="o"
+                  :label="member.uname + '(' + member.uid + ')'"
+                  :value="member.uid"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+          </el-form>
+          <template #footer>
+            <span class="dialog-footer">
+              <el-button @click="remove_member_dialog_visible = false"
+                >取消</el-button
+              >
+              <el-button
+                type="primary"
+                @click="reportRemoveMember"
+                :disabled="disable_api_call"
+                >确认</el-button
+              >
+            </span>
+          </template>
+        </el-dialog>
+
         <el-menu
           default-active="1"
           class="el-menu-demo"
@@ -412,6 +464,37 @@
           </el-table>
         </div>
         <div v-if="active_enum_select == 3" class="query-record-div">
+         <el-form
+            :inline="true"
+            :model="query_challenge_status_form"
+            style="margin-top: 10px"
+          >
+            <el-form-item>
+              <el-date-picker
+                v-model="query_challenge_status_form.date"
+                type="date"
+                placeholder="选择查询的日期"
+                :disabled-date="disabledDate"
+                @change="handleQueryChallengeDataChange"
+              >
+              </el-date-picker>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="selectAllNoticeMember"
+                >选择全部可提醒成员</el-button
+              >
+            </el-form-item>
+            <el-form-item>
+              <el-button type="danger" @click="clearSelectAllNoticeMember"
+                >清空已选择提醒成员</el-button
+              >
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="reportNoticeMember" :disabled="disable_api_call"
+                >提醒已选择成员</el-button
+              >
+            </el-form-item>
+          </el-form>
           <el-table
             :data="battle_status_data"
             :height="status_table_height"
@@ -428,8 +511,8 @@
             </el-table-column>
             <el-table-column
               prop="today_challenged"
-              label="完整刀"
-              width="90"
+              :label="'完整刀（'+total_used_full_chance+' / 90）'"
+              width="170"
               sortable
             />
             <el-table-column
@@ -440,8 +523,8 @@
             />
             <el-table-column
               prop="remain_addition_challeng"
-              label="余尾刀"
-              width="90"
+              :label="'余尾刀 '+ total_unused_addition_chance"
+              width="110"
               sortable
             />
             <el-table-column label="已使用SL" width="85">
@@ -449,6 +532,11 @@
                 <el-icon v-if="scope.row.use_sl" style="margin-left: 25px">
                   <check />
                 </el-icon>
+              </template>
+            </el-table-column>
+            <el-table-column label="提醒出刀" width="85">
+              <template #default="scope">
+                <el-checkbox style="margin-left: 25px" v-model="notice_challenge_form.notice_member[scope.row.uid]" :disabled="query_challenge_status_form.date != null || scope.row.today_challenged >= 3"></el-checkbox>
               </template>
             </el-table-column>
           </el-table>
@@ -595,7 +683,22 @@
               </el-col>
             </el-row>
             <el-row style="margin-top: 40px">
-              <el-col :span="19"></el-col>
+              <el-col :span="11"></el-col>
+              <el-col :span="4">
+                <el-button
+                  type="danger"
+                  @click="remove_member_dialog_visible = true"
+                  >移除公会成员</el-button
+                >
+              </el-col>
+              <el-col :span="4">
+                <el-button
+                  type="primary"
+                  @click="chose_clan_dialog_visible = true"
+                  style="margin-bottom: 10px"
+                  >选择公会</el-button
+                >
+              </el-col>
               <el-col :span="4">
                 <el-button
                   type="danger"
@@ -639,6 +742,7 @@ export default {
       report_queue_dialog_visible: false,
       report_subscribe_dialog_visible: false,
       report_sl_dialog_visible: false,
+      remove_member_dialog_visible: false,
       active_sub_enum_select: 1,
       active_enum_select: 1,
       boss_status: null,
@@ -647,6 +751,14 @@ export default {
       subs_table_height: "800px",
       status_table_height: "800px",
       record_table_height: "800px",
+      query_challenge_status_form:{
+        clan_gid: null,
+        date: null
+      },
+      notice_challenge_form:{
+        clan_gid: null,
+        notice_member: {}
+      },
       report_record_form: {
         clan_gid: null,
         target_boss: null,
@@ -681,6 +793,10 @@ export default {
         member: '',
         boss: '',
         cycle: '',
+      },
+      remove_member_form: {
+        clan_gid: null,
+        remove_member: '',
       }
     }
   },
@@ -701,6 +817,22 @@ export default {
         }
       }
       return list
+    },
+    total_used_full_chance(){
+      let chance = 0
+      if(!this.battle_status_data) return null
+      for(let status_obj of this.battle_status_data){
+        chance += status_obj.today_challenged
+      }
+      return chance
+    },
+    total_unused_addition_chance(){
+      let chance = 0
+      if(!this.battle_status_data) return null
+      for(let status_obj of this.battle_status_data){
+        chance += status_obj.remain_addition_challeng
+      }
+      return chance
     }
   },
   watch: {
@@ -710,7 +842,11 @@ export default {
       this.report_subscribe_form.clan_gid = newValue
       this.query_record_form.clan_gid = newValue
       this.report_sl_form.clan_gid = newValue
+      this.query_challenge_status_form.clan_gid = newValue
+      this.notice_challenge_form.clan_gid = newValue
+      this.remove_member_form.clan_gid = newValue
       this.refreshStatus()
+      localStorage.setItem("selscted_clan", this.selscted_clan)
     },
     current_clanbattle_data(newValue, oldValue) {
       if (oldValue != null && newValue != oldValue) {
@@ -725,6 +861,13 @@ export default {
         }
         this.show_subscribe_data = subscribe_data
       }
+    },
+    member_list(newValue){
+      let notice_challenge_member_dict = {}
+      for (let item of newValue){
+        notice_challenge_member_dict[item.uid] = false
+      }
+      this.notice_challenge_form.notice_member = notice_challenge_member_dict
     }
   },
   setup() {
@@ -735,6 +878,7 @@ export default {
     }
     else {
       this.selscted_clan = localStorage.getItem("selscted_clan")
+      this.getClanInfo()
     }
     //this.handleSubMenuSelect('1')
     this.getFormHeight()
@@ -973,12 +1117,25 @@ export default {
       axios.get("api/clanbattle/member_list", { params: { clan_gid: this.selscted_clan } })
         .then((resp) => {
           if (resp.data.err_code == 0) {
-            this.member_list = resp.data.member_list
+            if (this.member_list != null){
+              let is_list_same = true
+              if (this.member_list.length == resp.data.member_list.length){
+                for(let i in this.member_list.length){
+                  if (this.member_list[i] != resp.data.member_list[i]){
+                    is_list_same = false
+                    break
+                  }
+                }
+              }
+              else is_list_same = false
+              if (!is_list_same) this.member_list = resp.data.member_list
+            }
+            else this.member_list = resp.data.member_list
             if (this.refresh_timer_id == null) {
               this.refresh_timer_id = setInterval(() => {
                 console.log("refresh data");
                 this.refreshStatus();
-              }, 15000);
+              }, 8000);
             }
             this.getBossStatus()
             this.getInQueue()
@@ -1017,15 +1174,18 @@ export default {
       ElNotification.info("正在获取公会信息")
       axios.get("api/clanbattle/get_joined_clan")
         .then((resp) => {
-          console.log(resp.data)
-          if (resp.data.err_code != 0) this.$router.push("/login")
+          if (resp.data.err_code != 0) {
+            ElNotification.info("未登录，请先登录，如未设置密码请先向机器人发送“设置密码+密码”设置")
+            this.$router.push("/login")
+            return
+          }
           this.joined_clan = resp.data.clan_list
+          if (this.selscted_clan != "") return
           if (resp.data.clan_list.length == 0) {
             ElMessage.error("您还没有加入任何公会");
           }
           else if (resp.data.clan_list.length == 1) {
             this.selscted_clan = resp.data.clan_list[0]
-            localStorage.setItem("selscted_clan", this.selscted_clan)
           }
           else {
             this.chose_clan_dialog_visible = true
@@ -1037,7 +1197,7 @@ export default {
         })
     },
     getBattleStatus() {
-      axios.get("api/clanbattle/battle_status", { params: { clan_gid: this.selscted_clan } })
+      axios.post("api/clanbattle/battle_status", this.query_challenge_status_form)
         .then((resp) => {
           if (resp.data.err_code == 0) this.battle_status_data = resp.data.status
           else this.$router.push("/login")
@@ -1060,13 +1220,66 @@ export default {
     },
     getFormHeight() {
       this.record_table_height = window.innerHeight - 285.5 + 'px';
-      this.status_table_height = window.innerHeight - 213 + 'px';
+      this.status_table_height = window.innerHeight - 285.5 + 'px';
       this.subs_table_height = window.innerHeight - 274 + 'px';
     },
     getCnTime(utcTime) {
       let date = new Date(utcTime)
       date.setHours(date.getHours() + 8)
       return date.toLocaleString()
+    },
+    selectAllNoticeMember(){
+      if (this.query_challenge_status_form.date != null) return
+      for(let status of this.battle_status_data){
+        if (status.today_challenged < 3) this.notice_challenge_form.notice_member[status.uid] = true
+      }
+    },
+    clearSelectAllNoticeMember(){
+      for(let key in this.notice_challenge_form.notice_member){
+        this.notice_challenge_form.notice_member[key] = false
+      }
+    },
+    reportNoticeMember(){
+      this.disable_api_call = true
+      axios.post("api/clanbattle/notice_member", this.notice_challenge_form)
+        .then((resp) => {
+          let resp_data = resp.data;
+          if (resp_data.err_code != 0) {
+            ElMessage.error(resp_data.msg);
+          } else {
+            ElMessage.success("提醒成功");
+          }
+          this.disable_api_call = false
+        })
+        .catch((err) => {
+          console.log(err);
+          ElMessage.error("网络错误");
+          this.disable_api_call = false
+        });
+    },
+    reportRemoveMember(){
+      this.disable_api_call = true
+      if(!this.remove_member_form.remove_member || this.remove_member_form.remove_member == ""){
+        ElMessage.error("请选择成员");
+        this.disable_api_call = false
+        return
+      }
+      axios.post("api/clanbattle/remove_clan_member", this.remove_member_form)
+        .then((resp) => {
+          let resp_data = resp.data;
+          if (resp_data.err_code != 0) {
+            ElMessage.error(resp_data.msg);
+          } else {
+            this.remove_member_form.remove_member = null
+            ElMessage.success("移除成员成功");
+          }
+          this.disable_api_call = false
+        })
+        .catch((err) => {
+          console.log(err);
+          ElMessage.error("网络错误");
+          this.disable_api_call = false
+        });
     },
     query_record_confirm() {
       axios.post("api/clanbattle/query_record", this.query_record_form)
@@ -1089,6 +1302,9 @@ export default {
       this.query_record_form.boss = ''
       this.query_record_form.cycle = ''
     },
+    handleQueryChallengeDataChange(){
+      this.getBattleStatus()
+    },
     handleMenuSelect(key) {
       this.active_enum_select = key
     },
@@ -1100,6 +1316,7 @@ export default {
     },
     logout() {
       document.cookie = "session=0;expires=-1";
+      localStorage.clear()
       this.$router.push("/login")
     }
   }
