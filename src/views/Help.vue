@@ -2,6 +2,7 @@
   <div>
     <el-main>
       <span>注意：当前会战为测试版，命令随时可能发生变更</span><br />
+      <span>如果您是第一次使用本公会战系统，请查看<a href="/userguide">用户指南</a></span><br />
       <el-table
         :data="tableData"
         :height="table_height"
@@ -44,11 +45,11 @@ export default {
         },
         {
           command: "报刀(整)[1-5](伤害)(:注释)(@某人)",
-          description: "报刀，伤害单位可以使用w,kw,e，如加上整则强制上报为完整刀，否则优先上报为补偿刀",
+          description: "报刀，伤害单位可以使用w,kw,e，在有剩余补偿刀的情况下，如加上整则上报为完整刀，否则默认上报为补偿刀",
         },
         {
           command: "尾刀(整)[1-5](:注释)(@某人)",
-          description: "收尾刀报刀，如加上整则强制上报为完整刀，否则优先上报为补偿刀",
+          description: "收尾刀报刀，在有剩余补偿刀的情况下，如加上整则上报为完整刀，否则默认上报为补偿刀",
         },
         {
           command: "状态",
@@ -92,7 +93,7 @@ export default {
         },
         {
           command: "撤回[1-5]",
-          description: "撤回上次x王的报刀，仅出刀者/代刀者/会战管理员可以撤回",
+          description: "撤回上次x王的报刀，若不加几王则默认撤回最近的出刀，仅出刀者/代刀者/会战管理员可以撤回",
         },
         {
           command: "sl[1-5](:注释)(@某人)",

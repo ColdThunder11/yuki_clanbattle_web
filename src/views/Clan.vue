@@ -298,10 +298,7 @@
           width="50%"
         >
           <el-form :model="remove_member_form">
-            <el-form-item
-              label="移除成员"
-              :label-width="formLabelWidth"
-            >
+            <el-form-item label="移除成员" :label-width="formLabelWidth">
               <el-select
                 v-model="remove_member_form.remove_member"
                 placeholder="请选择要移除的成员"
@@ -331,6 +328,71 @@
             </span>
           </template>
         </el-dialog>
+        <!-- 调整进度选择框 -->
+        <el-dialog
+          v-model="change_boss_status_dialog_visible"
+          title="调整进度"
+          width="50%"
+        >
+          <el-form :model="report_subscribe_form">
+            <el-form-item label="Boss" :label-width="formLabelWidth">
+              <el-select
+                v-model="change_boss_status_form.boss"
+                placeholder="请选择要调整的Boss"
+              >
+                <el-option label="1王" value="1"></el-option>
+                <el-option label="2王" value="2"></el-option>
+                <el-option label="3王" value="3"></el-option>
+                <el-option label="4王" value="4"></el-option>
+                <el-option label="5王" value="5"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item
+              v-if="change_boss_status_form.boss"
+              label="周目"
+              :label-width="formLabelWidth"
+            >
+              <el-select
+                v-model="change_boss_status_form.cycle"
+                placeholder="请选择要调整到的周目"
+              >
+                <el-option
+                  v-for="(cycle, o) in Array(100)
+                    .fill(0)
+                    .map((el, i) => 1 + i)"
+                  :key="o"
+                  :label="cycle + '周目'"
+                  :value="cycle + ''"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item
+              v-if="change_boss_status_form.cycle"
+              label="剩余血量"
+              :label-width="formLabelWidth"
+            >
+              <el-input
+                v-model="change_boss_status_form.remain_hp"
+                placeholder="请输入要调整到的剩余血量（错误的血量可能导致严重问题，请务必检查）"
+                autocomplete="off"
+                @keyup.enter="repostChangeBossStatus"
+              ></el-input>
+            </el-form-item>
+          </el-form>
+          <template #footer>
+            <span class="dialog-footer">
+              <el-button @click="change_boss_status_dialog_visible = false"
+                >取消</el-button
+              >
+              <el-button
+                type="primary"
+                @click="repostChangeBossStatus"
+                :disabled="disable_api_call"
+                >确认</el-button
+              >
+            </span>
+          </template>
+        </el-dialog>
 
         <el-menu
           default-active="1"
@@ -342,7 +404,8 @@
           <el-menu-item index="2">预约表</el-menu-item>
           <el-menu-item index="3">出刀统计</el-menu-item>
           <el-menu-item index="4">出刀记录</el-menu-item>
-          <el-menu-item index="5">设置</el-menu-item>
+          <el-menu-item index="5">会战统计</el-menu-item>
+          <el-menu-item index="6">设置</el-menu-item>
         </el-menu>
         <div class="line"></div>
         <div v-if="active_enum_select == 1">
@@ -380,16 +443,48 @@
                         :key="p"
                       >
                         {{ getMemberUname(queue_item.member_uid) }}正在挑战中
+                        <span
+                          v-if="
+                            !(
+                              queue_item.comment == null ||
+                              queue_item.comment == ''
+                            )
+                          "
+                        >
+                          ：备注{{ queue_item.comment }}
+                        </span>
                       </p>
                     </div>
                   </div>
                   <div v-if="on_tree_dict" style="margin: 5px 0 0 5px">
+                    <div v-if="on_tree_dict[parseInt(o + 1)].length > 0">
+                      <p
+                        v-for="(on_tree_item, p) in on_tree_dict[
+                          parseInt(o + 1)
+                        ]"
+                        :key="p"
+                      >
+                        {{ getMemberUname(on_tree_item.member_uid) }}还挂在树上
+                        <span
+                          v-if="
+                            !(
+                              on_tree_item.comment == null ||
+                              on_tree_item.comment == ''
+                            )
+                          "
+                        >
+                          ：备注{{ on_tree_item.comment }}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                  <!--<div v-if="on_tree_dict" style="margin: 5px 0 0 5px">
                     <div v-if="on_tree_uname_list[parseInt(o)] != '-None'">
                       <p>
                         {{ on_tree_uname_list[parseInt(o)] }}
                       </p>
                     </div>
-                  </div>
+                  </div>-->
                 </el-card>
               </el-col>
             </el-row>
@@ -422,6 +517,15 @@
                   type="primary"
                   @click="report_sl_dialog_visible = true"
                   >上报SL</el-button
+                >
+              </el-col>
+            </el-row>
+            <el-row justify="center" style="margin-top: 20px" :gutter="12">
+              <el-col :span="4">
+                <el-button
+                  type="primary"
+                  @click="change_boss_status_dialog_visible = true"
+                  >修改Boss状态</el-button
                 >
               </el-col>
             </el-row>
@@ -464,7 +568,7 @@
           </el-table>
         </div>
         <div v-if="active_enum_select == 3" class="query-record-div">
-         <el-form
+          <el-form
             :inline="true"
             :model="query_challenge_status_form"
             style="margin-top: 10px"
@@ -490,7 +594,10 @@
               >
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" @click="reportNoticeMember" :disabled="disable_api_call"
+              <el-button
+                type="primary"
+                @click="reportNoticeMember"
+                :disabled="disable_api_call"
                 >提醒已选择成员</el-button
               >
             </el-form-item>
@@ -511,7 +618,7 @@
             </el-table-column>
             <el-table-column
               prop="today_challenged"
-              :label="'完整刀（'+total_used_full_chance+' / 90）'"
+              :label="'完整刀（' + total_used_full_chance + ' / 90）'"
               width="170"
               sortable
             />
@@ -523,7 +630,7 @@
             />
             <el-table-column
               prop="remain_addition_challeng"
-              :label="'余尾刀 '+ total_unused_addition_chance"
+              :label="'余尾刀 ' + total_unused_addition_chance"
               width="110"
               sortable
             />
@@ -536,7 +643,14 @@
             </el-table-column>
             <el-table-column label="提醒出刀" width="85">
               <template #default="scope">
-                <el-checkbox style="margin-left: 25px" v-model="notice_challenge_form.notice_member[scope.row.uid]" :disabled="query_challenge_status_form.date != null || scope.row.today_challenged >= 3"></el-checkbox>
+                <el-checkbox
+                  style="margin-left: 25px"
+                  v-model="notice_challenge_form.notice_member[scope.row.uid]"
+                  :disabled="
+                    query_challenge_status_form.date != null ||
+                    scope.row.today_challenged >= 3
+                  "
+                ></el-checkbox>
               </template>
             </el-table-column>
           </el-table>
@@ -656,7 +770,90 @@
             </el-table-column>
           </el-table>
         </div>
-        <div v-if="active_enum_select == 5">
+        <div v-if="active_enum_select == 5" class="analyze-data-div">
+          <el-menu
+            v-if="boss_status"
+            default-active="1"
+            class="el-menu-demo"
+            mode="horizontal"
+            @select="handleAlyzeMenuSelect"
+          >
+            <el-menu-item index="1">公会总表</el-menu-item>
+            <el-menu-item index="2">个人数据统计</el-menu-item>
+          </el-menu>
+          <div v-if="active_analyze_enum_select == 1">
+            <el-table
+              :data="full_clanbattle_analyze_clan_data_build"
+              :height="status_table_height"
+              border
+              class="data-show-form"
+              style="width: 100%; background-color: rgba(255, 255, 255, 0.5)"
+            >
+              <el-table-column label="成员">
+                <template #default="scope">
+                  <span>{{
+                    getMemberUname(scope.row.uid) + "(" + scope.row.uid + ")"
+                  }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column
+                prop="total_damage"
+                label="总伤害"
+                width="170"
+                sortable
+              />
+              <el-table-column
+                prop="full_challenge"
+                label="总刀数"
+                width="90"
+                sortable
+              />
+              <el-table-column
+                prop="remain_challenge"
+                label="补偿刀"
+                width="90"
+                sortable
+              />
+            </el-table>
+          </div>
+          <div v-if="active_analyze_enum_select == 2">
+            <div
+              style="height: 440px; background-color: rgba(255, 255, 255, 0.75)"
+            >
+              <el-row>
+                <el-col :span="12">
+                  <div
+                    style="height: 40px; text-align: center; margin-top: 15px"
+                  >
+                    各Boss伤害占比
+                  </div>
+                </el-col>
+                <el-col :span="12">
+                  <div
+                    style="height: 40px; text-align: center; margin-top: 15px"
+                  >
+                    个人伤害占比
+                  </div>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="12">
+                  <div
+                    id="personal_boss_damage_status_chart"
+                    style="height: 400px"
+                  ></div>
+                </el-col>
+                <el-col :span="12"
+                  ><div
+                    id="personal_boss_damage_in_clan_chart"
+                    style="height: 400px"
+                  ></div
+                ></el-col>
+              </el-row>
+            </div>
+          </div>
+        </div>
+        <div v-if="active_enum_select == 6">
           <div
             style="
               background-color: rgba(255, 255, 255, 0.7) !important;
@@ -696,7 +893,7 @@
                   type="primary"
                   @click="chose_clan_dialog_visible = true"
                   style="margin-bottom: 10px"
-                  >选择公会</el-button
+                  >重新选择公会</el-button
                 >
               </el-col>
               <el-col :span="4">
@@ -720,10 +917,43 @@ import axios from "axios";
 // @ is an alias to /src
 import { ElMessage, ElNotification, ElMessageBox } from "element-plus";
 
+import * as echarts from 'echarts/core';
+// 引入柱状图图表，图表后缀都为 Chart
+import { PieChart } from 'echarts/charts';
+// 引入饼图
+import { BarChart } from 'echarts/charts';
+// 引入提示框，标题，直角坐标系，数据集，内置数据转换器组件，组件后缀都为 Component
+import {
+  TitleComponent,
+  TooltipComponent,
+  GridComponent,
+  DatasetComponent,
+  TransformComponent
+} from 'echarts/components';
+// 标签自动布局，全局过渡动画等特性
+import { LabelLayout, UniversalTransition } from 'echarts/features';
+// 引入 Canvas 渲染器，注意引入 CanvasRenderer 或者 SVGRenderer 是必须的一步
+import { CanvasRenderer } from 'echarts/renderers';
+
+// 注册必须的组件
+echarts.use([
+  TitleComponent,
+  TooltipComponent,
+  GridComponent,
+  DatasetComponent,
+  TransformComponent,
+  BarChart,
+  PieChart,
+  LabelLayout,
+  UniversalTransition,
+  CanvasRenderer
+]);
+
 export default {
-  name: 'Clan',
+  name: "Clan",
   data() {
     return {
+      self_uid: null,
       refresh_timer_id: null,
       joined_clan: null,
       member_list: null,
@@ -732,6 +962,10 @@ export default {
       show_subscribe_data: [],
       query_record_result_data: [],
       battle_status_data: [],
+      full_clanbattle_analyze_data: [],
+      full_clanbattle_analyze_clan_data_build: [],
+      full_clanbattle_analyze_fullclan_data_build: [],
+      full_clanbattle_analyze_person_data_build: [],
       on_tree_dict: null,
       //on_tree_uname_list: [],
       selscted_clan: "",
@@ -743,21 +977,24 @@ export default {
       report_subscribe_dialog_visible: false,
       report_sl_dialog_visible: false,
       remove_member_dialog_visible: false,
+      change_boss_status_dialog_visible: false,
       active_sub_enum_select: 1,
       active_enum_select: 1,
+      active_analyze_enum_select: 1,
       boss_status: null,
       max_boss_cycle: 1,
-      formLabelWidth: '120px',
+      formLabelWidth: "120px",
       subs_table_height: "800px",
       status_table_height: "800px",
       record_table_height: "800px",
-      query_challenge_status_form:{
+      active_echarts: null,
+      query_challenge_status_form: {
         clan_gid: null,
-        date: null
+        date: null,
       },
-      notice_challenge_form:{
+      notice_challenge_form: {
         clan_gid: null,
-        notice_member: {}
+        notice_member: {},
       },
       report_record_form: {
         clan_gid: null,
@@ -767,18 +1004,18 @@ export default {
         froce_use_full_chance: false,
         is_proxy_report: false,
         proxy_report_member: null,
-        comment: null
+        comment: null,
       },
       report_queue_form: {
         clan_gid: null,
         target_boss: null,
-        comment: null
+        comment: null,
       },
       report_subscribe_form: {
         clan_gid: null,
         target_boss: null,
         target_cycle: null,
-        comment: null
+        comment: null,
       },
       report_sl_form: {
         clan_gid: null,
@@ -787,169 +1024,205 @@ export default {
         is_proxy_report: false,
         proxy_report_uid: null,
       },
+      change_boss_status_form: {
+        clan_gid: null,
+        boss: null,
+        cycle: null,
+        remain_hp: null,
+      },
       query_record_form: {
-        clan_gid: '',
-        date: '',
-        member: '',
-        boss: '',
-        cycle: '',
+        clan_gid: "",
+        date: "",
+        member: "",
+        boss: "",
+        cycle: "",
       },
       remove_member_form: {
         clan_gid: null,
-        remove_member: '',
-      }
-    }
+        remove_member: "",
+      },
+    };
   },
   computed: {
     on_tree_uname_list() {
-      let list = []
+      let list = [];
       if (this.on_tree_dict != null) {
         for (let i = 1; i < 6; i++) {
-          let name_str = "-None"
+          let name_str = "-None";
           for (let obj of this.on_tree_dict[i.toString()]) {
-            name_str += "、" + this.getMemberUname(obj.member_uid)
+            name_str += "、" + this.getMemberUname(obj.member_uid);
           }
           if (name_str != "-None") {
-            name_str = name_str.substr(6)
-            name_str += "还在树上"
+            name_str = name_str.substr(6);
+            name_str += "还在树上";
           }
-          list.push(name_str)
+          list.push(name_str);
         }
       }
-      return list
+      return list;
     },
-    total_used_full_chance(){
-      let chance = 0
-      if(!this.battle_status_data) return null
-      for(let status_obj of this.battle_status_data){
-        chance += status_obj.today_challenged
+    total_used_full_chance() {
+      let chance = 0;
+      if (!this.battle_status_data) return null;
+      for (let status_obj of this.battle_status_data) {
+        chance += status_obj.today_challenged;
       }
-      return chance
+      return chance;
     },
-    total_unused_addition_chance(){
-      let chance = 0
-      if(!this.battle_status_data) return null
-      for(let status_obj of this.battle_status_data){
-        chance += status_obj.remain_addition_challeng
+    total_unused_addition_chance() {
+      let chance = 0;
+      if (!this.battle_status_data) return null;
+      for (let status_obj of this.battle_status_data) {
+        chance += status_obj.remain_addition_challeng;
       }
-      return chance
-    }
+      return chance;
+    },
   },
   watch: {
     selscted_clan(newValue) {
-      this.report_record_form.clan_gid = newValue
-      this.report_queue_form.clan_gid = newValue
-      this.report_subscribe_form.clan_gid = newValue
-      this.query_record_form.clan_gid = newValue
-      this.report_sl_form.clan_gid = newValue
-      this.query_challenge_status_form.clan_gid = newValue
-      this.notice_challenge_form.clan_gid = newValue
-      this.remove_member_form.clan_gid = newValue
-      this.refreshStatus()
-      localStorage.setItem("selscted_clan", this.selscted_clan)
+      this.report_record_form.clan_gid = newValue;
+      this.report_queue_form.clan_gid = newValue;
+      this.report_subscribe_form.clan_gid = newValue;
+      this.query_record_form.clan_gid = newValue;
+      this.report_sl_form.clan_gid = newValue;
+      this.query_challenge_status_form.clan_gid = newValue;
+      this.notice_challenge_form.clan_gid = newValue;
+      this.remove_member_form.clan_gid = newValue;
+      this.change_boss_status_form.clan_gid = newValue;
+      this.refreshStatus();
+      localStorage.setItem("selscted_clan", this.selscted_clan);
     },
     current_clanbattle_data(newValue, oldValue) {
       if (oldValue != null && newValue != oldValue) {
-        this.setClanbattleDataNumber()
+        this.setClanbattleDataNumber();
       }
     },
     active_sub_enum_select(newValue) {
-      let subscribe_data = []
+      let subscribe_data = [];
       if (this.subscribe_dict) {
         for (let sub of this.subscribe_dict[newValue]) {
-          subscribe_data.push({ member_name: this.getMemberUname(sub.member_uid) + '(' + sub.member_uid + ')', target_cycle: sub.target_cycle, comment: sub.comment })
+          subscribe_data.push({
+            member_name:
+              this.getMemberUname(sub.member_uid) + "(" + sub.member_uid + ")",
+            target_cycle: sub.target_cycle,
+            comment: sub.comment,
+          });
         }
-        this.show_subscribe_data = subscribe_data
+        this.show_subscribe_data = subscribe_data;
       }
     },
-    member_list(newValue){
-      let notice_challenge_member_dict = {}
-      for (let item of newValue){
-        notice_challenge_member_dict[item.uid] = false
+    member_list(newValue) {
+      let notice_challenge_member_dict = {};
+      for (let item of newValue) {
+        notice_challenge_member_dict[item.uid] = false;
       }
-      this.notice_challenge_form.notice_member = notice_challenge_member_dict
-    }
+      this.notice_challenge_form.notice_member = notice_challenge_member_dict;
+    },
+    active_enum_select(newValue) {
+      if (newValue == 5) {
+        this.$data.active_analyze_enum_select = 1;
+      } else {
+        this.destoryAnalyzeEcharts();
+      }
+      if (newValue == 2) {
+        this.active_sub_enum_select = 1;
+      }
+    },
+    active_analyze_enum_select(newValue) {
+      if (this.active_enum_select == 5) {
+        if (newValue == 2) {
+          this.$nextTick(() => this.initAnalyzeEcharts());
+        }
+      }
+    },
   },
-  setup() {
-  },
+  setup() {},
   created() {
     if (!localStorage.getItem("selscted_clan")) {
-      this.getClanInfo()
+      this.getClanInfo();
+    } else {
+      this.selscted_clan = localStorage.getItem("selscted_clan");
+      this.getClanInfo();
     }
-    else {
-      this.selscted_clan = localStorage.getItem("selscted_clan")
-      this.getClanInfo()
-    }
+    this.self_uid = localStorage.getItem("uid");
     //this.handleSubMenuSelect('1')
-    this.getFormHeight()
-    window.addEventListener('resize', this.getFormHeight);
+    this.getFormHeight();
+    window.addEventListener("resize", this.getFormHeight);
   },
-  components: {
-  },
+  components: {},
   methods: {
     handleChoseClanClose(done) {
-      ElMessageBox.confirm('你确定要退出公会选择吗？')
+      ElMessageBox.confirm("你确定要退出公会选择吗？")
         .then(() => {
-          done()
+          done();
         })
         .catch(() => {
           // catch error
-        })
+        });
     },
     refreshStatus() {
-      this.getClanMember()//其他都要在获取公会成员之后，要不然有可能用户名有问题
+      this.getClanMember(); //其他都要在获取公会成员之后，要不然有可能用户名有问题
     },
     getOnTree() {
-      axios.get("api/clanbattle/on_tree_list", { params: { clan_gid: this.selscted_clan } })
+      axios
+        .get("api/clanbattle/on_tree_list", {
+          params: { clan_gid: this.selscted_clan },
+        })
         .then((resp) => {
-          if (resp.data.err_code == 0) this.on_tree_dict = resp.data.on_tree
-          else this.$router.push("/login")
+          if (resp.data.err_code == 0) this.on_tree_dict = resp.data.on_tree;
+          else this.$router.push("/login");
         })
         .catch((err) => {
           console.log(err);
           ElMessage.error("获取信息失败，请尝试刷新页面");
-        })
+        });
     },
     getSubscribes() {
-      axios.get("api/clanbattle/subscribe_list", { params: { clan_gid: this.selscted_clan } })
+      axios
+        .get("api/clanbattle/subscribe_list", {
+          params: { clan_gid: this.selscted_clan },
+        })
         .then((resp) => {
           if (resp.data.err_code == 0) {
-            this.active_sub_enum_select = "1"
-            this.subscribe_dict = resp.data.subscribe
-          }
-          else this.$router.push("/login")
+            this.active_sub_enum_select = "1";
+            this.subscribe_dict = resp.data.subscribe;
+          } else this.$router.push("/login");
         })
         .catch((err) => {
           console.log(err);
           ElMessage.error("获取信息失败，请尝试刷新页面");
-        })
+        });
     },
     getMemberUname(uid) {
-      if (!this.member_list) return null
+      if (!this.member_list) return null;
       for (let member of this.member_list) {
-        if (member.uid == uid) return member.uname
+        if (member.uid == uid) return member.uname;
       }
-      return null
+      return null;
     },
     getInQueue() {
-      axios.get("api/clanbattle/get_in_queue", { params: { clan_gid: this.selscted_clan } })
+      axios
+        .get("api/clanbattle/get_in_queue", {
+          params: { clan_gid: this.selscted_clan },
+        })
         .then((resp) => {
-          if (resp.data.err_code == 0) this.in_queue_dict = resp.data.queue
-          else this.$router.push("/login")
+          if (resp.data.err_code == 0) this.in_queue_dict = resp.data.queue;
+          else this.$router.push("/login");
         })
         .catch((err) => {
           console.log(err);
           ElMessage.error("获取信息失败，请尝试刷新页面");
-        })
+        });
     },
     reportQueue() {
-      this.disable_api_call = true
+      this.disable_api_call = true;
       if (!this.report_queue_form.target_boss) {
         ElMessage.error("请选择挑战的Boss");
-        this.disable_api_call = false
-        return
+        this.disable_api_call = false;
+        return;
       }
-      axios.post("api/clanbattle/report_queue", this.report_queue_form)
+      axios
+        .post("api/clanbattle/report_queue", this.report_queue_form)
         .then((resp) => {
           let resp_data = resp.data;
           if (resp_data.err_code != 0) {
@@ -957,36 +1230,43 @@ export default {
           } else {
             ElMessage.success("申请出刀成功");
             this.refreshStatus();
-            this.report_queue_dialog_visible = false
-            this.report_queue_form.target_boss = null
-            this.report_queue_form.comment = null
+            this.report_queue_dialog_visible = false;
+            this.report_queue_form.target_boss = null;
+            this.report_queue_form.comment = null;
           }
-          this.disable_api_call = false
+          this.disable_api_call = false;
         })
         .catch((err) => {
           console.log(err);
           ElMessage.error("网络错误");
-          this.disable_api_call = false
+          this.disable_api_call = false;
         });
     },
     reportRecord() {
-      this.disable_api_call = true
+      this.disable_api_call = true;
       if (!this.report_record_form.target_boss) {
         ElMessage.error("请选择挑战的Boss");
-        this.disable_api_call = false
-        return
+        this.disable_api_call = false;
+        return;
       }
-      if (!this.report_record_form.is_kill_boss && !this.report_record_form.damage) {
+      if (
+        !this.report_record_form.is_kill_boss &&
+        !this.report_record_form.damage
+      ) {
         ElMessage.error("请输入造成的伤害");
-        this.disable_api_call = false
-        return
+        this.disable_api_call = false;
+        return;
       }
-      if (this.report_record_form.is_proxy_report && !this.report_record_form.proxy_report_member) {
+      if (
+        this.report_record_form.is_proxy_report &&
+        !this.report_record_form.proxy_report_member
+      ) {
         ElMessage.error("请选择代理上报的对象");
-        this.disable_api_call = false
-        return
+        this.disable_api_call = false;
+        return;
       }
-      axios.post("api/clanbattle/report_record", this.report_record_form)
+      axios
+        .post("api/clanbattle/report_record", this.report_record_form)
         .then((resp) => {
           let resp_data = resp.data;
           if (resp_data.err_code != 0) {
@@ -994,50 +1274,54 @@ export default {
           } else {
             ElMessage.success("上报成功");
             this.refreshStatus();
-            this.report_record_dialog_visible = false
-            this.report_record_form.target_boss = null
-            this.report_record_form.damage = null
-            this.report_record_form.is_kill_boss = false
-            this.report_record_form.froce_use_full_chance = false
-            this.report_record_form.is_proxy_report = false
-            this.report_record_form.proxy_report_member = null
-            this.report_record_form.comment = null
+            this.report_record_dialog_visible = false;
+            this.report_record_form.target_boss = null;
+            this.report_record_form.damage = null;
+            this.report_record_form.is_kill_boss = false;
+            this.report_record_form.froce_use_full_chance = false;
+            this.report_record_form.is_proxy_report = false;
+            this.report_record_form.proxy_report_member = null;
+            this.report_record_form.comment = null;
           }
-          this.disable_api_call = false
+          this.disable_api_call = false;
         })
         .catch((err) => {
           console.log(err);
           ElMessage.error("网络错误");
-          this.disable_api_call = false
+          this.disable_api_call = false;
         });
     },
     reportUnqueue() {
-      this.disable_api_call = true
-      axios.get("api/clanbattle/report_unqueue", { params: { clan_gid: this.selscted_clan } })
+      this.disable_api_call = true;
+      axios
+        .get("api/clanbattle/report_unqueue", {
+          params: { clan_gid: this.selscted_clan },
+        })
         .then((resp) => {
           if (resp.data.err_code == 0) ElMessage.success("取消申请出刀成功");
           else ElMessage.error(resp.data.msg);
-          this.disable_api_call = false
+          this.disable_api_call = false;
         })
         .catch((err) => {
           console.log(err);
           ElMessage.error("获取信息失败，请尝试刷新页面");
-          this.disable_api_call = false
-        })
+          this.disable_api_call = false;
+        });
     },
     reportSubscribe() {
-      this.disable_api_call = true
+      this.disable_api_call = true;
       if (!this.report_subscribe_form.target_boss) {
         ElMessage.error("请选择预约的Boss");
-        this.disable_api_call = false
-        return
+        this.disable_api_call = false;
+        return;
       }
       if (!this.report_subscribe_form.target_cycle) {
         ElMessage.error("请选择预约的周目");
-        this.disable_api_call = false
-        return
+        this.disable_api_call = false;
+        return;
       }
-      axios.post("api/clanbattle/report_subscribe", this.report_subscribe_form)
+      axios
+        .post("api/clanbattle/report_subscribe", this.report_subscribe_form)
         .then((resp) => {
           let resp_data = resp.data;
           if (resp_data.err_code != 0) {
@@ -1045,32 +1329,36 @@ export default {
           } else {
             ElMessage.success("预约成功");
             this.refreshStatus();
-            this.report_subscribe_dialog_visible = false
-            this.report_subscribe_form.target_boss = null
-            this.report_subscribe_form.target_cycle = null
-            this.report_subscribe_form.comment = null
+            this.report_subscribe_dialog_visible = false;
+            this.report_subscribe_form.target_boss = null;
+            this.report_subscribe_form.target_cycle = null;
+            this.report_subscribe_form.comment = null;
           }
-          this.disable_api_call = false
+          this.disable_api_call = false;
         })
         .catch((err) => {
           console.log(err);
           ElMessage.error("网络错误");
-          this.disable_api_call = false
+          this.disable_api_call = false;
         });
     },
     reportSL() {
-      this.disable_api_call = true
+      this.disable_api_call = true;
       if (!this.report_sl_form.boss) {
         ElMessage.error("请选择SL的Boss");
-        this.disable_api_call = false
-        return
+        this.disable_api_call = false;
+        return;
       }
-      if (this.report_sl_form.is_proxy_report && !this.report_sl_form.proxy_report_uid) {
+      if (
+        this.report_sl_form.is_proxy_report &&
+        !this.report_sl_form.proxy_report_uid
+      ) {
         ElMessage.error("请选择代理上报的对象");
-        this.disable_api_call = false
-        return
+        this.disable_api_call = false;
+        return;
       }
-      axios.post("api/clanbattle/report_sl", this.report_sl_form)
+      axios
+        .post("api/clanbattle/report_sl", this.report_sl_form)
         .then((resp) => {
           let resp_data = resp.data;
           if (resp_data.err_code != 0) {
@@ -1078,23 +1366,66 @@ export default {
           } else {
             ElMessage.success("上报SL成功");
             this.refreshStatus();
-            this.report_sl_dialog_visible = false
-            this.report_sl_form.boss = null
-            this.report_sl_form.is_proxy_report = false
-            this.report_sl_form.proxy_report_uid = null
-            this.report_sl_form.comment = null
+            this.report_sl_dialog_visible = false;
+            this.report_sl_form.boss = null;
+            this.report_sl_form.is_proxy_report = false;
+            this.report_sl_form.proxy_report_uid = null;
+            this.report_sl_form.comment = null;
           }
-          this.disable_api_call = false
+          this.disable_api_call = false;
         })
         .catch((err) => {
           console.log(err);
           ElMessage.error("网络错误");
-          this.disable_api_call = false
+          this.disable_api_call = false;
+        });
+    },
+    repostChangeBossStatus() {
+      this.disable_api_call = true;
+      if (!this.change_boss_status_form.boss) {
+        ElMessage.error("请选择要修改进度的Boss");
+        this.disable_api_call = false;
+        return;
+      }
+      if (!this.change_boss_status_form.cycle) {
+        ElMessage.error("请选择要修改的周目");
+        this.disable_api_call = false;
+        return;
+      }
+      if (!this.change_boss_status_form.remain_hp) {
+        ElMessage.error("请输入Boss的剩余血量");
+        this.disable_api_call = false;
+        return;
+      }
+      axios
+        .post("api/clanbattle/change_boss_status", this.change_boss_status_form)
+        .then((resp) => {
+          let resp_data = resp.data;
+          if (resp_data.err_code != 0) {
+            ElMessage.error(resp_data.msg);
+          } else {
+            ElMessage.success("修改进度成功");
+            this.refreshStatus();
+            this.change_boss_status_dialog_visible = false;
+            this.change_boss_status_form.boss = null;
+            this.change_boss_status_form.cycle = null;
+            this.change_boss_status_form.remain_hp = null;
+          }
+          this.disable_api_call = false;
+        })
+        .catch((err) => {
+          console.log(err);
+          ElMessage.error("网络错误");
+          this.disable_api_call = false;
         });
     },
     setClanbattleDataNumber() {
-      this.disable_api_call = true
-      axios.post("api/clanbattle/change_current_clanbattle_data_num", { clan_gid: this.selscted_clan, data_num: this.current_clanbattle_data })
+      this.disable_api_call = true;
+      axios
+        .post("api/clanbattle/change_current_clanbattle_data_num", {
+          clan_gid: this.selscted_clan,
+          data_num: this.current_clanbattle_data,
+        })
         .then((resp) => {
           let resp_data = resp.data;
           if (resp_data.err_code != 0) {
@@ -1104,144 +1435,302 @@ export default {
             ElMessage.success("修改当前公会战档案成功");
             this.refreshStatus();
           }
-          this.disable_api_call = false
+          this.disable_api_call = false;
         })
         .catch((err) => {
           console.log(err);
           ElMessage.error("网络错误");
-          this.disable_api_call = false
+          this.disable_api_call = false;
         });
     },
     getClanMember() {
       //ElNotification.info("正在获取公会成员信息")
-      axios.get("api/clanbattle/member_list", { params: { clan_gid: this.selscted_clan } })
+      axios
+        .get("api/clanbattle/member_list", {
+          params: { clan_gid: this.selscted_clan },
+        })
         .then((resp) => {
           if (resp.data.err_code == 0) {
-            if (this.member_list != null){
-              let is_list_same = true
-              if (this.member_list.length == resp.data.member_list.length){
-                for(let i in this.member_list.length){
-                  if (this.member_list[i] != resp.data.member_list[i]){
-                    is_list_same = false
-                    break
+            if (this.member_list != null) {
+              let is_list_same = true;
+              if (this.member_list.length == resp.data.member_list.length) {
+                for (let i in this.member_list.length) {
+                  if (this.member_list[i] != resp.data.member_list[i]) {
+                    is_list_same = false;
+                    break;
                   }
                 }
-              }
-              else is_list_same = false
-              if (!is_list_same) this.member_list = resp.data.member_list
-            }
-            else this.member_list = resp.data.member_list
+              } else is_list_same = false;
+              if (!is_list_same) this.member_list = resp.data.member_list;
+            } else this.member_list = resp.data.member_list;
             if (this.refresh_timer_id == null) {
               this.refresh_timer_id = setInterval(() => {
                 console.log("refresh data");
                 this.refreshStatus();
               }, 8000);
             }
-            this.getBossStatus()
-            this.getInQueue()
-            this.getSubscribes()
-            this.getOnTree()
-            this.getBattleStatus()
-            this.getClanBattleDataNum()
-          }
-          else this.$router.push("/login")
+            this.getBossStatus();
+            this.getInQueue();
+            this.getSubscribes();
+            this.getOnTree();
+            this.getBattleStatus();
+            this.getClanBattleDataNum();
+            this.getAnlyzeData();
+          } else this.$router.push("/login");
         })
         .catch((err) => {
           console.log(err);
           ElMessage.error("获取加入公会信息失败，请尝试刷新页面");
-        })
+        });
     },
     getBossStatus() {
       //ElNotification.info("正在获取Boss信息")
-      axios.get("api/clanbattle/boss_status", { params: { clan_gid: this.selscted_clan } })
+      axios
+        .get("api/clanbattle/boss_status", {
+          params: { clan_gid: this.selscted_clan },
+        })
         .then((resp) => {
           if (resp.data.err_code == 0) {
-            this.boss_status = resp.data.boss_status
-            let max_cycle = 1
+            this.boss_status = resp.data.boss_status;
+            let max_cycle = 1;
             for (let status of resp.data.boss_status) {
-              if (status.target_cycle > max_cycle) max_cycle = status.target_cycle
+              if (status.target_cycle > max_cycle)
+                max_cycle = status.target_cycle;
             }
-            this.max_boss_cycle = max_cycle
-          }
-          else this.$router.push("/login")
+            this.max_boss_cycle = max_cycle;
+          } else this.$router.push("/login");
         })
         .catch((err) => {
           console.log(err);
           ElMessage.error("获取加入公会信息失败，请尝试刷新页面");
-        })
+        });
     },
     getClanInfo() {
-      ElNotification.info("正在获取公会信息")
-      axios.get("api/clanbattle/get_joined_clan")
+      ElNotification.info("正在获取公会信息");
+      axios
+        .get("api/clanbattle/get_joined_clan")
         .then((resp) => {
           if (resp.data.err_code != 0) {
-            ElNotification.info("未登录，请先登录，如未设置密码请先向机器人发送“设置密码+密码”设置")
-            this.$router.push("/login")
-            return
+            ElNotification.info(
+              "未登录，请先登录，如未设置密码请先向机器人发送“设置密码+密码”设置"
+            );
+            this.$router.push("/login");
+            return;
           }
-          this.joined_clan = resp.data.clan_list
-          if (this.selscted_clan != "") return
+          this.joined_clan = resp.data.clan_list;
+          if (this.selscted_clan != "") return;
           if (resp.data.clan_list.length == 0) {
             ElMessage.error("您还没有加入任何公会");
-          }
-          else if (resp.data.clan_list.length == 1) {
-            this.selscted_clan = resp.data.clan_list[0]
-          }
-          else {
-            this.chose_clan_dialog_visible = true
+          } else if (resp.data.clan_list.length == 1) {
+            this.selscted_clan = resp.data.clan_list[0];
+          } else {
+            this.chose_clan_dialog_visible = true;
           }
         })
         .catch((err) => {
           console.log(err);
           ElMessage.error("获取加入公会信息失败，请尝试刷新页面");
-        })
+        });
     },
     getBattleStatus() {
-      axios.post("api/clanbattle/battle_status", this.query_challenge_status_form)
+      axios
+        .post("api/clanbattle/battle_status", this.query_challenge_status_form)
         .then((resp) => {
-          if (resp.data.err_code == 0) this.battle_status_data = resp.data.status
-          else this.$router.push("/login")
+          if (resp.data.err_code == 0)
+            this.battle_status_data = resp.data.status;
+          else this.$router.push("/login");
         })
         .catch((err) => {
           console.log(err);
           ElMessage.error("获取信息失败，请尝试刷新页面");
-        })
+        });
     },
     getClanBattleDataNum() {
-      axios.get("api/clanbattle/current_clanbattle_data_num", { params: { clan_gid: this.selscted_clan } })
+      axios
+        .get("api/clanbattle/current_clanbattle_data_num", {
+          params: { clan_gid: this.selscted_clan },
+        })
         .then((resp) => {
-          if (resp.data.err_code == 0) this.current_clanbattle_data = resp.data.data_num
-          else this.$router.push("/login")
+          if (resp.data.err_code == 0)
+            this.current_clanbattle_data = resp.data.data_num;
+          else this.$router.push("/login");
         })
         .catch((err) => {
           console.log(err);
           ElMessage.error("获取信息失败，请尝试刷新页面");
+        });
+    },
+    updateAnalyzeData() {
+      let full_data = this.full_clanbattle_analyze_data;
+      //遍历并创建总记录
+      let build_total_data_dict = {};
+      for (let data_item of full_data) {
+        if (data_item.member_uid == "admin") continue;
+        if (
+          !Object.prototype.hasOwnProperty.call(
+            build_total_data_dict,
+            data_item.member_uid
+          )
+        ) {
+          build_total_data_dict[data_item.member_uid] = {
+            uid: data_item.member_uid,
+            total_damage: 0,
+            full_challenge: 0,
+            remain_challenge: 0,
+          };
+        }
+        build_total_data_dict[data_item.member_uid]["total_damage"] +=
+          data_item.damage;
+        if (data_item.is_extra_time)
+          build_total_data_dict[data_item.member_uid]["remain_challenge"] += 1;
+        else build_total_data_dict[data_item.member_uid]["full_challenge"] += 1;
+      }
+      let build_total_data_list = [];
+      for (let build_data in build_total_data_dict) {
+        build_total_data_list.push(build_total_data_dict[build_data]);
+      }
+      this.full_clanbattle_analyze_clan_data_build = build_total_data_list;
+    },
+    destoryAnalyzeEcharts() {
+      if (this.active_echarts != null) {
+        for (let echart_inst of this.active_echarts) {
+          echart_inst.dispose();
+        }
+        this.active_echarts = null;
+      }
+    },
+    initAnalyzeEcharts() {
+      if (this.active_analyze_enum_select == 2) {
+        this.destoryAnalyzeEcharts();
+        this.active_echarts = [];
+        let personal_boss_damage_status_chart = echarts.init(
+          document.getElementById("personal_boss_damage_status_chart")
+        );
+        this.active_echarts.push(personal_boss_damage_status_chart);
+        let build_data_list = [0, 0, 0, 0, 0];
+        for (let data_item of this.full_clanbattle_analyze_data) {
+          if (data_item.member_uid == this.self_uid)
+            build_data_list[data_item.target_boss - 1] += data_item.damage;
+        }
+        let option = {
+          xAxis: {
+            data: ["1王", "2王", "3王", "4王", "5王"],
+          },
+          yAxis: {
+            axisLabel: {
+              formatter: "",
+              align: "center",
+              // ...
+            },
+          },
+          series: [
+            {
+              type: "bar",
+              data: build_data_list,
+              label: {
+                show: true,
+                formatter: (params) => {
+                  return Math.floor((params.value / 10000) * 100) / 100 + "w";
+                },
+                position: "top",
+              },
+            },
+          ],
+        };
+        personal_boss_damage_status_chart.setOption(option);
+        let personal_boss_damage_in_clan_chart = echarts.init(
+          document.getElementById("personal_boss_damage_in_clan_chart")
+        );
+        this.active_echarts.push(personal_boss_damage_in_clan_chart);
+        let build_data_self_in_clan_list = [0, 0]; //自己，其余人
+        for (let data_item of this.full_clanbattle_analyze_data) {
+          if (data_item.member_uid == "admin") continue;
+          if (data_item.member_uid == this.self_uid)
+            build_data_self_in_clan_list[0] += data_item.damage;
+          else build_data_self_in_clan_list[1] += data_item.damage;
+        }
+        let self_in_clan_option = {
+          series: [
+            {
+              type: "pie",
+              data: [
+                {
+                  value: build_data_self_in_clan_list[0],
+                  name: "自己",
+                },
+                {
+                  value: build_data_self_in_clan_list[1],
+                  name: "其余人",
+                },
+              ],
+              label: {
+                show: true,
+                formatter: (params) => {
+                  return params.percent + "%-" + params.name;
+                },
+                position: "inside",
+              },
+            },
+          ],
+        };
+        personal_boss_damage_in_clan_chart.setOption(self_in_clan_option);
+      }
+    },
+    getAnlyzeData() {
+      let query_form = {
+        clan_gid: this.selscted_clan,
+        date: "",
+        member: "",
+        boss: "",
+        cycle: "",
+      };
+      axios
+        .post("api/clanbattle/query_record", query_form)
+        .then((resp) => {
+          let resp_data = resp.data;
+          if (resp_data.err_code != 0) {
+            ElMessage.error(resp_data.msg);
+          } else {
+            this.full_clanbattle_analyze_data = resp_data.record;
+            this.updateAnalyzeData();
+          }
         })
+        .catch((err) => {
+          console.log(err);
+          ElMessage.error("网络错误");
+        });
     },
     getFormHeight() {
-      this.record_table_height = window.innerHeight - 285.5 + 'px';
-      this.status_table_height = window.innerHeight - 285.5 + 'px';
-      this.subs_table_height = window.innerHeight - 274 + 'px';
+      this.record_table_height = window.innerHeight - 285.5 + "px";
+      this.status_table_height = window.innerHeight - 285.5 + "px";
+      this.subs_table_height = window.innerHeight - 274 + "px";
+      if (this.active_echarts != null) {
+        for (let chart of this.active_echarts) {
+          chart.resize();
+        }
+      }
     },
     getCnTime(utcTime) {
-      let date = new Date(utcTime)
-      date.setHours(date.getHours() + 8)
-      return date.toLocaleString()
+      let date = new Date(utcTime);
+      date.setHours(date.getHours() + 8);
+      return date.toLocaleString();
     },
-    selectAllNoticeMember(){
-      if (this.query_challenge_status_form.date != null) return
-      for(let status of this.battle_status_data){
-        if (status.today_challenged < 3) this.notice_challenge_form.notice_member[status.uid] = true
+    selectAllNoticeMember() {
+      if (this.query_challenge_status_form.date != null) return;
+      for (let status of this.battle_status_data) {
+        if (status.today_challenged < 3)
+          this.notice_challenge_form.notice_member[status.uid] = true;
       }
     },
-    clearSelectAllNoticeMember(){
-      for(let key in this.notice_challenge_form.notice_member){
-        this.notice_challenge_form.notice_member[key] = false
+    clearSelectAllNoticeMember() {
+      for (let key in this.notice_challenge_form.notice_member) {
+        this.notice_challenge_form.notice_member[key] = false;
       }
     },
-    reportNoticeMember(){
-      this.disable_api_call = true
-      axios.post("api/clanbattle/notice_member", this.notice_challenge_form)
+    reportNoticeMember() {
+      this.disable_api_call = true;
+      axios
+        .post("api/clanbattle/notice_member", this.notice_challenge_form)
         .then((resp) => {
           let resp_data = resp.data;
           if (resp_data.err_code != 0) {
@@ -1249,46 +1738,51 @@ export default {
           } else {
             ElMessage.success("提醒成功");
           }
-          this.disable_api_call = false
+          this.disable_api_call = false;
         })
         .catch((err) => {
           console.log(err);
           ElMessage.error("网络错误");
-          this.disable_api_call = false
+          this.disable_api_call = false;
         });
     },
-    reportRemoveMember(){
-      this.disable_api_call = true
-      if(!this.remove_member_form.remove_member || this.remove_member_form.remove_member == ""){
+    reportRemoveMember() {
+      this.disable_api_call = true;
+      if (
+        !this.remove_member_form.remove_member ||
+        this.remove_member_form.remove_member == ""
+      ) {
         ElMessage.error("请选择成员");
-        this.disable_api_call = false
-        return
+        this.disable_api_call = false;
+        return;
       }
-      axios.post("api/clanbattle/remove_clan_member", this.remove_member_form)
+      axios
+        .post("api/clanbattle/remove_clan_member", this.remove_member_form)
         .then((resp) => {
           let resp_data = resp.data;
           if (resp_data.err_code != 0) {
             ElMessage.error(resp_data.msg);
           } else {
-            this.remove_member_form.remove_member = null
+            this.remove_member_form.remove_member = null;
             ElMessage.success("移除成员成功");
           }
-          this.disable_api_call = false
+          this.disable_api_call = false;
         })
         .catch((err) => {
           console.log(err);
           ElMessage.error("网络错误");
-          this.disable_api_call = false
+          this.disable_api_call = false;
         });
     },
     query_record_confirm() {
-      axios.post("api/clanbattle/query_record", this.query_record_form)
+      axios
+        .post("api/clanbattle/query_record", this.query_record_form)
         .then((resp) => {
           let resp_data = resp.data;
           if (resp_data.err_code != 0) {
             ElMessage.error(resp_data.msg);
           } else {
-            this.query_record_result_data = resp_data.record
+            this.query_record_result_data = resp_data.record;
           }
         })
         .catch((err) => {
@@ -1297,30 +1791,33 @@ export default {
         });
     },
     clear_query_record_form() {
-      this.query_record_form.date = ''
-      this.query_record_form.member = ''
-      this.query_record_form.boss = ''
-      this.query_record_form.cycle = ''
+      this.query_record_form.date = "";
+      this.query_record_form.member = "";
+      this.query_record_form.boss = "";
+      this.query_record_form.cycle = "";
     },
-    handleQueryChallengeDataChange(){
-      this.getBattleStatus()
+    handleQueryChallengeDataChange() {
+      this.getBattleStatus();
     },
     handleMenuSelect(key) {
-      this.active_enum_select = key
+      this.active_enum_select = key;
     },
     handleSubMenuSelect(key) {
-      this.active_sub_enum_select = key
+      this.active_sub_enum_select = key;
+    },
+    handleAlyzeMenuSelect(key) {
+      this.active_analyze_enum_select = key;
     },
     disabledDate(time) {
-      return time.getTime() > Date.now()
+      return time.getTime() > Date.now();
     },
     logout() {
       document.cookie = "session=0;expires=-1";
-      localStorage.clear()
-      this.$router.push("/login")
-    }
-  }
-}
+      localStorage.clear();
+      this.$router.push("/login");
+    },
+  },
+};
 </script>
 
 <style scoped>

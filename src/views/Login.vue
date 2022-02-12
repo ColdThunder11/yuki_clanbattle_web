@@ -47,8 +47,9 @@ export default {
           if (resp_data.err_code != 0) {
             ElMessage.error(resp_data.msg);
           } else {
-            localStorage.clear()
-            this.$router.push("/clan")
+            localStorage.clear();
+            localStorage.setItem("uid",this.login_form.qq_uid);
+            this.$router.push("/clan");
           }
           console.log(resp);
         })
