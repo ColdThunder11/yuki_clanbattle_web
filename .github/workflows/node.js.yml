@@ -25,7 +25,7 @@ jobs:
         cache: 'npm'
     - name: Build Vue
       run: |
-          npm insatll
+          npm install
           npm run build
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v3.0.0
