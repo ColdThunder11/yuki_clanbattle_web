@@ -574,6 +574,13 @@
             style="margin-top: 10px"
           >
             <el-form-item>
+              <el-switch
+                v-model="active_challenge_status_mode"
+                active-text="三刀视图"
+                inactive-text="简易"
+              />
+            </el-form-item>
+            <el-form-item>
               <el-date-picker
                 v-model="query_challenge_status_form.date"
                 type="date"
@@ -606,10 +613,11 @@
             :data="battle_status_data"
             :height="status_table_height"
             border
+            v-if="active_challenge_status_mode == false"
             class="data-show-form"
             style="width: 100%; background-color: rgba(255, 255, 255, 0.5)"
           >
-            <el-table-column label="成员">
+            <el-table-column :label="`成员 （${member_list.length} / 30）`">
               <template #default="scope">
                 <span>{{
                   getMemberUname(scope.row.uid) + "(" + scope.row.uid + ")"
@@ -652,6 +660,172 @@
                   "
                 ></el-checkbox>
               </template>
+            </el-table-column>
+          </el-table>
+          <el-table
+            :data="today_all_records"
+            :height="status_table_height"
+            border
+            v-if="active_challenge_status_mode == true"
+            class="data-show-form"
+            style="width: 100%; background-color: rgba(255, 255, 255, 0.5)"
+          >
+            <el-table-column :label="`成员 （${member_list.length} / 30）`" width="260">
+              <template #default="scope">
+                <span>{{
+                  getMemberUname(scope.row.uid) + "(" + scope.row.uid + ")"
+                }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="第一刀" align="center">
+              <el-table-column label="完整刀" align="center">
+                <template #default="scope">
+                  <span v-if="scope.row.challenge_1 != null">
+                    <span style="color: rgba(255, 51, 51, 0.9)">{{
+                      scope.row.challenge_1.target_cycle
+                    }}</span>
+                    <span>周目</span>
+                    <span style="color: rgba(255, 51, 51, 0.9)">{{
+                      scope.row.challenge_1.target_boss
+                    }}</span>
+                    <span>王</span>
+                    <br />
+                    <span>伤害：</span>
+                    <span style="color: rgba(51, 204, 255, 1)">{{
+                      scope.row.challenge_1.damage
+                    }}</span>
+                  </span>
+                </template>
+              </el-table-column>
+              <el-table-column label="补偿刀" align="center">
+                <template #default="scope">
+                  <span v-if="scope.row.challenge_1_r != null">
+                    <span style="color: rgba(255, 51, 51, 0.9)">{{
+                      scope.row.challenge_1_r.target_cycle
+                    }}</span>
+                    <span>周目</span>
+                    <span style="color: rgba(255, 51, 51, 0.9)">{{
+                      scope.row.challenge_1_r.target_boss
+                    }}</span>
+                    <span>王</span>
+                    <br />
+                    <span>伤害：</span>
+                    <span style="color: rgba(51, 204, 255, 1)">{{
+                      scope.row.challenge_1_r.damage
+                    }}</span>
+                  </span>
+                  <span
+                    v-if="
+                      scope.row.challenge_1_r == null &&
+                      scope.row.challenge_1 != null &&
+                      scope.row.challenge_1.remain_next_chance
+                    "
+                    style="color: rgba(255, 20, 147, 0.9)"
+                  >
+                    待出刀
+                  </span>
+                </template>
+              </el-table-column>
+            </el-table-column>
+            <el-table-column label="第二刀" align="center">
+              <el-table-column label="完整刀" align="center">
+                <template #default="scope">
+                  <span v-if="scope.row.challenge_2 != null">
+                    <span style="color: rgba(255, 51, 51, 0.9)">{{
+                      scope.row.challenge_2.target_cycle
+                    }}</span>
+                    <span>周目</span>
+                    <span style="color: rgba(255, 51, 51, 0.9)">{{
+                      scope.row.challenge_2.target_boss
+                    }}</span>
+                    <span>王</span>
+                    <br />
+                    <span>伤害：</span>
+                    <span style="color: rgba(51, 204, 255, 1)">{{
+                      scope.row.challenge_2.damage
+                    }}</span>
+                  </span>
+                </template>
+              </el-table-column>
+              <el-table-column label="补偿刀" align="center">
+                <template #default="scope">
+                  <span v-if="scope.row.challenge_2_r != null">
+                    <span style="color: rgba(255, 51, 51, 0.9)">{{
+                      scope.row.challenge_2_r.target_cycle
+                    }}</span>
+                    <span>周目</span>
+                    <span style="color: rgba(255, 51, 51, 0.9)">{{
+                      scope.row.challenge_2_r.target_boss
+                    }}</span>
+                    <span>王</span>
+                    <br />
+                    <span>伤害：</span>
+                    <span style="color: rgba(51, 204, 255, 1)">{{
+                      scope.row.challenge_2_r.damage
+                    }}</span>
+                  </span>
+                  <span
+                    v-if="
+                      scope.row.challenge_2_r == null &&
+                      scope.row.challenge_2 != null &&
+                      scope.row.challenge_2.remain_next_chance
+                    "
+                    style="color: rgba(255, 20, 147, 0.9)"
+                  >
+                    待出刀
+                  </span>
+                </template>
+              </el-table-column>
+            </el-table-column>
+            <el-table-column label="第三刀" align="center">
+              <el-table-column label="完整刀" align="center">
+                <template #default="scope">
+                  <span v-if="scope.row.challenge_3 != null">
+                    <span style="color: rgba(255, 51, 51, 0.9)">{{
+                      scope.row.challenge_3.target_cycle
+                    }}</span>
+                    <span>周目</span>
+                    <span style="color: rgba(255, 51, 51, 0.9)">{{
+                      scope.row.challenge_3.target_boss
+                    }}</span>
+                    <span>王</span>
+                    <br />
+                    <span>伤害：</span>
+                    <span style="color: rgba(51, 204, 255, 1)">{{
+                      scope.row.challenge_3.damage
+                    }}</span>
+                  </span>
+                </template>
+              </el-table-column>
+              <el-table-column label="补偿刀" align="center">
+                <template #default="scope">
+                  <span v-if="scope.row.challenge_3_r != null">
+                    <span style="color: rgba(255, 51, 51, 0.9)">{{
+                      scope.row.challenge_3_r.target_cycle
+                    }}</span>
+                    <span>周目</span>
+                    <span style="color: rgba(255, 51, 51, 0.9)">{{
+                      scope.row.challenge_3_r.target_boss
+                    }}</span>
+                    <span>王</span>
+                    <br />
+                    <span>伤害：</span>
+                    <span style="color: rgba(51, 204, 255, 1)">{{
+                      scope.row.challenge_3_r.damage
+                    }}</span>
+                  </span>
+                  <span
+                    v-if="
+                      scope.row.challenge_3_r == null &&
+                      scope.row.challenge_3 != null &&
+                      scope.row.challenge_3.remain_next_chance
+                    "
+                    style="color: rgba(255, 20, 147, 0.9)"
+                  >
+                    待出刀
+                  </span>
+                </template>
+              </el-table-column>
             </el-table-column>
           </el-table>
         </div>
@@ -981,6 +1155,7 @@ export default {
       active_sub_enum_select: 1,
       active_enum_select: 1,
       active_analyze_enum_select: 1,
+      active_challenge_status_mode: false,
       boss_status: null,
       max_boss_cycle: 1,
       formLabelWidth: "120px",
@@ -988,6 +1163,7 @@ export default {
       status_table_height: "800px",
       record_table_height: "800px",
       active_echarts: null,
+      today_all_records: null,
       query_challenge_status_form: {
         clan_gid: null,
         date: null,
@@ -1136,7 +1312,7 @@ export default {
       }
     },
   },
-  setup() {},
+  setup() { },
   created() {
     if (!localStorage.getItem("selscted_clan")) {
       this.getClanInfo();
@@ -1175,6 +1351,85 @@ export default {
         .catch((err) => {
           console.log(err);
           ElMessage.error("获取信息失败，请尝试刷新页面");
+        });
+    },
+    getTodayRecords() {
+      let current_date = this.query_challenge_status_form.date == null ? new Date(new Date().setHours(0, 0, 0, 0)) : this.query_challenge_status_form.date;
+      let query_form = {
+        clan_gid: this.selscted_clan,
+        date: current_date,
+        member: "",
+        boss: "",
+        cycle: "",
+      }
+      axios
+        .post("api/clanbattle/query_record", query_form)
+        .then((resp) => {
+          let resp_data = resp.data;
+          if (resp_data.err_code != 0) {
+            ElMessage.error(resp_data.msg);
+          } else {
+            let today_all_records = resp_data.record.reverse();
+            console.log(today_all_records)
+            let build_list = []
+            //sort to dict
+            //create dict It's shit but it work fine, so just ok :)
+            for (let member of this.member_list) {
+              let challenge_1 = null;
+              let challenge_1_r = null;
+              let challenge_2 = null;
+              let challenge_2_r = null;
+              let challenge_3 = null;
+              let challenge_3_r = null;
+              for (let challenge of today_all_records) {
+                if (challenge.member_uid == member.uid) {
+                  if (!challenge.is_extra_time) {
+                    if (challenge_1 == null) {
+                      challenge_1 = challenge;
+                      continue;
+                    }
+                    else if (challenge_2 == null) {
+                      challenge_2 = challenge;
+                      continue;
+                    }
+                    else if (challenge_3 == null) {
+                      challenge_3 = challenge;
+                      continue;
+                    }
+                  }
+                  else {
+                    if(challenge_1_r == null && challenge_1 != null && challenge_1.remain_next_chance == true){
+                      challenge_1_r = challenge;
+                      continue;
+                    }
+                    else if(challenge_2_r == null && challenge_2 != null && challenge_2.remain_next_chance == true){
+                      challenge_2_r = challenge;
+                      continue;
+                    }
+                    else if(challenge_3_r == null && challenge_3 != null && challenge_3.remain_next_chance == true){
+                      challenge_3_r = challenge;
+                      continue;
+                    }
+                  }
+
+                }
+              }
+              build_list.push({
+                uid: member.uid,
+                challenge_1: challenge_1,
+                challenge_1_r: challenge_1_r,
+                challenge_2: challenge_2,
+                challenge_2_r: challenge_2_r,
+                challenge_3: challenge_3,
+                challenge_3_r: challenge_3_r,
+              })
+            }
+            this.today_all_records = build_list
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+          ElMessage.error("网络错误");
         });
     },
     getSubscribes() {
@@ -1476,6 +1731,7 @@ export default {
             this.getBattleStatus();
             this.getClanBattleDataNum();
             this.getAnlyzeData();
+            this.getTodayRecords();
           } else this.$router.push("/login");
         })
         .catch((err) => {
@@ -1798,6 +2054,7 @@ export default {
     },
     handleQueryChallengeDataChange() {
       this.getBattleStatus();
+      this.getTodayRecords();
     },
     handleMenuSelect(key) {
       this.active_enum_select = key;
@@ -1835,5 +2092,8 @@ export default {
 }
 .query-record-div tr {
   background-color: rgba(255, 255, 255, 0.6) !important;
+}
+.el-table thead.is-group th {
+  background-color: #ffffff !important;
 }
 </style>

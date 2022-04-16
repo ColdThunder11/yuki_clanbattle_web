@@ -5,6 +5,8 @@ import installElementPlus from './plugins/element'
 import axios from 'axios'
 import { Check } from '@element-plus/icons'
 
+import './element-variables.scss'
+
 const app = createApp(App)
 app.component('check',Check)
 app.config.globalProperties.$axios = axios
