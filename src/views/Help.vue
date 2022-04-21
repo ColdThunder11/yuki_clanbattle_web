@@ -92,16 +92,20 @@ export default {
           description: "查看预约了当前显示boss的成员",
         },
         {
-          command: "撤回[1-5]",
+          command: "撤回/销[1-5]",
           description: "撤回上次x王的报刀，若不加几王则默认撤回最近的出刀，仅出刀者/代刀者/会战管理员可以撤回",
         },
         {
-          command: "sl[1-5](:注释)(@某人)",
-          description: "记录sl",
+          command: "sl[1-5](?)(:注释)(@某人)",
+          description: "记录sl，如加问号则为查询",
         },
         {
           command: "查sl(@某人)",
           description: "查询sl状态",
+        },
+        {
+          command: "查刀 (@某人)",
+          description: "查询今日出刀状态，不加at则为最近5条记录",
         },
         {
           command: "修改进度 [1-5] [周目] [血量]",
