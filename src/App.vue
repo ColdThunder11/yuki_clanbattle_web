@@ -65,7 +65,7 @@ export default {
 }
 .page{
   margin: 0 0 0 0;
-  background:url("https://pic.wkny.moe/images/2021/10/13/87514114_p0459b2235439aded4.png");
+  background:url("~@/assets/bg.jpg");
   width:100%;
   height:100%;
   position:fixed;
