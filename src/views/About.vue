@@ -3,7 +3,7 @@
     <h2 align="left">关于</h2>
     <div style="background-color: rgba(255, 255, 255, 0.7) !important;margin-right:30px;">
       <p align="left">
-        Yuki Clanbattle测试版建设中，建议/反馈/参与测试 联系2561502056备注YukiClanbattle
+        Yuki Clanbattle建设中 <a href="https://github.com/ColdThunder11/yuki_clanbattle">Github地址</a>
       </p>
       <p align="left">当前版本：v0.1.7</p>
       <p align="left">
