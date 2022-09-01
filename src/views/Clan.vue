@@ -38,7 +38,7 @@
           width="50%"
         >
           <el-form :model="report_record_form">
-            <el-form-item label="Boss" :label-width="formLabelWidth">
+            <el-form-item v-if="clan_area != 'cn'" label="Boss" :label-width="formLabelWidth">
               <el-select
                 v-model="report_record_form.target_boss"
                 placeholder="请选择挑战的Boss"
@@ -122,7 +122,7 @@
           width="50%"
         >
           <el-form :model="report_queue_form">
-            <el-form-item label="Boss" :label-width="formLabelWidth">
+            <el-form-item v-if="clan_area != 'cn'" label="Boss" :label-width="formLabelWidth">
               <el-select
                 v-model="report_queue_form.target_boss"
                 placeholder="请选择申请的Boss"
@@ -235,7 +235,7 @@
           width="50%"
         >
           <el-form :model="report_sl_form">
-            <el-form-item label="Boss" :label-width="formLabelWidth">
+            <el-form-item v-if="clan_area != 'cn'" label="Boss" :label-width="formLabelWidth">
               <el-select
                 v-model="report_sl_form.boss"
                 placeholder="请选择SL的Boss"
@@ -410,84 +410,182 @@
         <div class="line"></div>
         <div v-if="active_enum_select == 1">
           <div v-if="boss_status" class="main-content-div">
-            <el-row justify="center" :gutter="15">
-              <el-col v-for="(boss_item, o) in boss_status" :key="o" :span="4">
-                <el-card class="box-card">
-                  <p style="margin: 0 0 0 2px">
-                    {{ parseInt(boss_item.target_boss) }}王
-                  </p>
-                  <br />
-                  <p style="margin: 0px 0 0 10px">
-                    {{ parseInt(boss_item.target_cycle) }}周目
-                  </p>
-                  <el-progress
-                    :text-inside="true"
-                    :stroke-width="20"
-                    :percentage="
-                      (boss_item.boss_hp / boss_item.max_boss_hp) * 100
-                    "
-                    status="exception"
-                  >
-                    <span style="text-align: center"
-                      >{{ parseInt(boss_item.boss_hp) }}/{{
-                        parseInt(boss_item.max_boss_hp)
-                      }}</span
+            <div v-if="clan_area != 'cn'">
+              <el-row justify="center" :gutter="15">
+                <el-col
+                  v-for="(boss_item, o) in boss_status"
+                  :key="o"
+                  :span="4"
+                >
+                  <el-card class="box-card">
+                    <p style="margin: 0 0 0 2px">
+                      {{ parseInt(boss_item.target_boss) }}王
+                    </p>
+                    <br />
+                    <p style="margin: 0px 0 0 10px">
+                      {{ parseInt(boss_item.target_cycle) }}周目
+                    </p>
+                    <el-progress
+                      :text-inside="true"
+                      :stroke-width="20"
+                      :percentage="
+                        (boss_item.boss_hp / boss_item.max_boss_hp) * 100
+                      "
+                      status="exception"
                     >
-                  </el-progress>
-                  <div v-if="in_queue_dict" style="margin: 5px 0 0 5px">
-                    <div v-if="in_queue_dict[parseInt(o + 1)].length > 0">
-                      <p
-                        v-for="(queue_item, p) in in_queue_dict[
-                          parseInt(o + 1)
-                        ]"
-                        :key="p"
+                      <span style="text-align: center"
+                        >{{ parseInt(boss_item.boss_hp) }}/{{
+                          parseInt(boss_item.max_boss_hp)
+                        }}</span
                       >
-                        {{ getMemberUname(queue_item.member_uid) }}正在挑战中
-                        <span
-                          v-if="
-                            !(
-                              queue_item.comment == null ||
-                              queue_item.comment == ''
-                            )
-                          "
+                    </el-progress>
+                    <div v-if="in_queue_dict" style="margin: 5px 0 0 5px">
+                      <div v-if="in_queue_dict[parseInt(o + 1)].length > 0">
+                        <p
+                          v-for="(queue_item, p) in in_queue_dict[
+                            parseInt(o + 1)
+                          ]"
+                          :key="p"
                         >
-                          ：备注{{ queue_item.comment }}
-                        </span>
-                      </p>
+                          {{ getMemberUname(queue_item.member_uid) }}正在挑战中
+                          <span
+                            v-if="
+                              !(
+                                queue_item.comment == null ||
+                                queue_item.comment == ''
+                              )
+                            "
+                          >
+                            ：备注{{ queue_item.comment }}
+                          </span>
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <div v-if="on_tree_dict" style="margin: 5px 0 0 5px">
-                    <div v-if="on_tree_dict[parseInt(o + 1)].length > 0">
-                      <p
-                        v-for="(on_tree_item, p) in on_tree_dict[
-                          parseInt(o + 1)
-                        ]"
-                        :key="p"
+                    <div v-if="on_tree_dict" style="margin: 5px 0 0 5px">
+                      <div v-if="on_tree_dict[parseInt(o + 1)].length > 0">
+                        <p
+                          v-for="(on_tree_item, p) in on_tree_dict[
+                            parseInt(o + 1)
+                          ]"
+                          :key="p"
+                        >
+                          {{
+                            getMemberUname(on_tree_item.member_uid)
+                          }}还挂在树上
+                          <span
+                            v-if="
+                              !(
+                                on_tree_item.comment == null ||
+                                on_tree_item.comment == ''
+                              )
+                            "
+                          >
+                            ：备注{{ on_tree_item.comment }}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                    <!--<div v-if="on_tree_dict" style="margin: 5px 0 0 5px">
+                        <div v-if="on_tree_uname_list[parseInt(o)] != '-None'">
+                          <p>
+                            {{ on_tree_uname_list[parseInt(o)] }}
+                          </p>
+                        </div>
+                      </div>-->
+                  </el-card>
+                </el-col>
+              </el-row>
+            </div>
+            <div v-if="clan_area == 'cn'">
+              <el-row justify="center" :gutter="15">
+                <el-col :span="14">
+                  <el-card class="box-card">
+                    <p style="margin: 0 0 0 2px">
+                      {{ parseInt(boss_status.target_boss) }}王
+                    </p>
+                    <br />
+                    <p style="margin: 0px 0 0 10px">
+                      {{ parseInt(boss_status.target_cycle) }}周目
+                    </p>
+                    <el-progress
+                      :text-inside="true"
+                      :stroke-width="20"
+                      :percentage="
+                        (boss_status.boss_hp / boss_status.max_boss_hp) * 100
+                      "
+                      status="exception"
+                    >
+                      <span style="text-align: center"
+                        >{{ parseInt(boss_status.boss_hp) }}/{{
+                          parseInt(boss_status.max_boss_hp)
+                        }}</span
                       >
-                        {{ getMemberUname(on_tree_item.member_uid) }}还挂在树上
-                        <span
-                          v-if="
-                            !(
-                              on_tree_item.comment == null ||
-                              on_tree_item.comment == ''
-                            )
-                          "
+                    </el-progress>
+                    <div v-if="in_queue_dict" style="margin: 5px 0 0 5px">
+                      <div
+                        v-if="
+                          in_queue_dict[boss_status.target_boss - 1].length > 0
+                        "
+                      >
+                        <p
+                          v-for="(queue_item, p) in in_queue_dict[
+                            boss_status.target_boss - 1
+                          ]"
+                          :key="p"
                         >
-                          ：备注{{ on_tree_item.comment }}
-                        </span>
-                      </p>
+                          {{ getMemberUname(queue_item.member_uid) }}正在挑战中
+                          <span
+                            v-if="
+                              !(
+                                queue_item.comment == null ||
+                                queue_item.comment == ''
+                              )
+                            "
+                          >
+                            ：备注{{ queue_item.comment }}
+                          </span>
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <!--<div v-if="on_tree_dict" style="margin: 5px 0 0 5px">
+                    <div v-if="on_tree_dict" style="margin: 5px 0 0 5px">
+                      <div
+                        v-if="
+                          on_tree_dict[boss_status.target_boss - 1].length > 0
+                        "
+                      >
+                        <p
+                          v-for="(on_tree_item, p) in on_tree_dict[
+                            boss_status.target_boss - 1
+                          ]"
+                          :key="p"
+                        >
+                          {{
+                            getMemberUname(on_tree_item.member_uid)
+                          }}还挂在树上
+                          <span
+                            v-if="
+                              !(
+                                on_tree_item.comment == null ||
+                                on_tree_item.comment == ''
+                              )
+                            "
+                          >
+                            ：备注{{ on_tree_item.comment }}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                    <!--<div v-if="on_tree_dict" style="margin: 5px 0 0 5px">
                     <div v-if="on_tree_uname_list[parseInt(o)] != '-None'">
                       <p>
                         {{ on_tree_uname_list[parseInt(o)] }}
                       </p>
                     </div>
                   </div>-->
-                </el-card>
-              </el-col>
-            </el-row>
+                  </el-card>
+                </el-col>
+              </el-row>
+            </div>
           </div>
           <div style="margin-top: 20px">
             <el-row justify="center" :gutter="12">
@@ -670,7 +768,10 @@
             class="data-show-form"
             style="width: 100%; background-color: rgba(255, 255, 255, 0.5)"
           >
-            <el-table-column :label="`成员 （${member_list.length} / 30）`" width="260">
+            <el-table-column
+              :label="`成员 （${member_list.length} / 30）`"
+              width="260"
+            >
               <template #default="scope">
                 <span>{{
                   getMemberUname(scope.row.uid) + "(" + scope.row.uid + ")"
@@ -1133,6 +1234,7 @@ export default {
       member_list: null,
       in_queue_dict: null,
       subscribe_dict: null,
+      clan_area: null,
       show_subscribe_data: [],
       query_record_result_data: [],
       battle_status_data: [],
@@ -1265,6 +1367,7 @@ export default {
       this.notice_challenge_form.clan_gid = newValue;
       this.remove_member_form.clan_gid = newValue;
       this.change_boss_status_form.clan_gid = newValue;
+      this.getClanArea();
       this.refreshStatus();
       localStorage.setItem("selscted_clan", this.selscted_clan);
     },
@@ -1398,15 +1501,15 @@ export default {
                     }
                   }
                   else {
-                    if(challenge_1_r == null && challenge_1 != null && challenge_1.remain_next_chance == true){
+                    if (challenge_1_r == null && challenge_1 != null && challenge_1.remain_next_chance == true) {
                       challenge_1_r = challenge;
                       continue;
                     }
-                    else if(challenge_2_r == null && challenge_2 != null && challenge_2.remain_next_chance == true){
+                    else if (challenge_2_r == null && challenge_2 != null && challenge_2.remain_next_chance == true) {
                       challenge_2_r = challenge;
                       continue;
                     }
-                    else if(challenge_3_r == null && challenge_3 != null && challenge_3.remain_next_chance == true){
+                    else if (challenge_3_r == null && challenge_3 != null && challenge_3.remain_next_chance == true) {
                       challenge_3_r = challenge;
                       continue;
                     }
@@ -1448,6 +1551,21 @@ export default {
           ElMessage.error("获取信息失败，请尝试刷新页面");
         });
     },
+    getClanArea() {
+      axios
+        .get("api/clanbattle/clan_area", {
+          params: { clan_gid: this.selscted_clan },
+        })
+        .then((resp) => {
+          if (resp.data.err_code == 0) {
+            this.clan_area = resp.data.area;
+          } else this.$router.push("/login");
+        })
+        .catch((err) => {
+          console.log(err);
+          ElMessage.error("获取信息失败，请尝试刷新页面");
+        });
+    },
     getMemberUname(uid) {
       if (!this.member_list) return null;
       for (let member of this.member_list) {
@@ -1471,6 +1589,9 @@ export default {
     },
     reportQueue() {
       this.disable_api_call = true;
+      if (this.clan_area == "cn") {
+        this.report_queue_form.target_boss = this.boss_status.target_boss.toString()
+      }
       if (!this.report_queue_form.target_boss) {
         ElMessage.error("请选择挑战的Boss");
         this.disable_api_call = false;
@@ -1499,6 +1620,9 @@ export default {
     },
     reportRecord() {
       this.disable_api_call = true;
+      if (this.clan_area == "cn") {
+        this.report_record_form.target_boss = this.boss_status.target_boss.toString()
+      }
       if (!this.report_record_form.target_boss) {
         ElMessage.error("请选择挑战的Boss");
         this.disable_api_call = false;
@@ -1748,12 +1872,14 @@ export default {
         .then((resp) => {
           if (resp.data.err_code == 0) {
             this.boss_status = resp.data.boss_status;
-            let max_cycle = 1;
-            for (let status of resp.data.boss_status) {
-              if (status.target_cycle > max_cycle)
-                max_cycle = status.target_cycle;
+            if (this.clan_area != "cn") {
+              let max_cycle = 1;
+              for (let status of resp.data.boss_status) {
+                if (status.target_cycle > max_cycle)
+                  max_cycle = status.target_cycle;
+              }
+              this.max_boss_cycle = max_cycle;
             }
-            this.max_boss_cycle = max_cycle;
           } else this.$router.push("/login");
         })
         .catch((err) => {
