@@ -524,12 +524,12 @@
                     <div v-if="in_queue_dict" style="margin: 5px 0 0 5px">
                       <div
                         v-if="
-                          in_queue_dict[boss_status.target_boss - 1].length > 0
+                          in_queue_dict[boss_status.target_boss].length > 0
                         "
                       >
                         <p
                           v-for="(queue_item, p) in in_queue_dict[
-                            boss_status.target_boss - 1
+                            boss_status.target_boss
                           ]"
                           :key="p"
                         >
@@ -550,12 +550,12 @@
                     <div v-if="on_tree_dict" style="margin: 5px 0 0 5px">
                       <div
                         v-if="
-                          on_tree_dict[boss_status.target_boss - 1].length > 0
+                          on_tree_dict[boss_status.target_boss].length > 0
                         "
                       >
                         <p
                           v-for="(on_tree_item, p) in on_tree_dict[
-                            boss_status.target_boss - 1
+                            boss_status.target_boss
                           ]"
                           :key="p"
                         >
@@ -1421,6 +1421,8 @@ export default {
       this.getClanInfo();
     } else {
       this.selscted_clan = localStorage.getItem("selscted_clan");
+      this.clan_area = localStorage.getItem("clan_area");
+      this.getClanArea();
       this.getClanInfo();
     }
     this.self_uid = localStorage.getItem("uid");
@@ -1473,7 +1475,7 @@ export default {
             ElMessage.error(resp_data.msg);
           } else {
             let today_all_records = resp_data.record.reverse();
-            console.log(today_all_records)
+            //console.log(today_all_records)
             let build_list = []
             //sort to dict
             //create dict It's shit but it work fine, so just ok :)
@@ -1559,6 +1561,7 @@ export default {
         .then((resp) => {
           if (resp.data.err_code == 0) {
             this.clan_area = resp.data.area;
+            localStorage.setItem("clan_area",resp.data.area)
           } else this.$router.push("/login");
         })
         .catch((err) => {
@@ -1847,7 +1850,7 @@ export default {
             } else this.member_list = resp.data.member_list;
             if (this.refresh_timer_id == null) {
               this.refresh_timer_id = setInterval(() => {
-                console.log("refresh data");
+                //console.log("refresh data");
                 this.refreshStatus();
               }, 8000);
             }
@@ -1882,6 +1885,9 @@ export default {
                   max_cycle = status.target_cycle;
               }
               this.max_boss_cycle = max_cycle;
+            }
+            else{
+              this.max_boss_cycle = this.boss_status.target_cycle;
             }
           } else this.$router.push("/login");
         })
