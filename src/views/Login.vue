@@ -23,6 +23,7 @@
 import axios from "axios";
 // @ is an alias to /src
 import { ElMessage } from "element-plus";
+import md5 from "js-md5"
 
 export default {
   name: "Login",
@@ -41,7 +42,11 @@ export default {
         ElMessage("请输入用户名和密码");
         return;
       }
-      axios.post("api/clanbattle/login", this.login_form)
+      var login_post_item = {
+        qq_uid: this.login_form.qq_uid,
+        password: md5(this.login_form.password + "sa823bs7ty1d1293asiu7ysaas"),
+      }
+      axios.post("api/clanbattle/login", login_post_item)
         .then((resp) => {
           let resp_data = resp.data;
           if (resp_data.err_code != 0) {
