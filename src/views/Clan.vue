@@ -1723,6 +1723,9 @@ export default {
     },
     reportSL() {
       this.disable_api_call = true;
+      if (this.clan_area == "cn") {
+        this.report_sl_form.target_boss = this.boss_status.target_boss.toString()
+      }
       if (!this.report_sl_form.boss) {
         ElMessage.error("请选择SL的Boss");
         this.disable_api_call = false;
