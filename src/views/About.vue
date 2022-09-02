@@ -5,9 +5,15 @@
       <p align="left">
         Yuki Clanbattle建设中 <a href="https://github.com/ColdThunder11/yuki_clanbattle">Github地址</a>
       </p>
-      <p align="left">当前版本：v0.1.7</p>
+      <p align="left">当前版本：v0.2.0</p>
       <p align="left">
         Change Log: <br />
+        v0.2.0<br />
+        新增：国服会战模式支持<br />
+        新增：查询指定刀数的成员的指令<br />
+        新增：删除公会指令<br />
+        新增：群内提醒出刀指令<br />
+        改进：Web端显示当前公会名称<br />
         v0.1.7<br />
         改进：代理报刀以后自动清除代报人的预约、出刀、挂树状态<br />
         改进：代理报刀支持省略boss序号<br />
