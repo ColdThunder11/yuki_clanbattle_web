@@ -393,7 +393,7 @@
             </span>
           </template>
         </el-dialog>
-
+        <h3 v-if="clan_name" style="text-align:center;margin-top:0px;">{{clan_name}}</h3>
         <el-menu
           default-active="1"
           class="el-menu-demo"
@@ -1235,6 +1235,7 @@ export default {
       in_queue_dict: null,
       subscribe_dict: null,
       clan_area: null,
+      clan_name: null,
       show_subscribe_data: [],
       query_record_result_data: [],
       battle_status_data: [],
@@ -1368,6 +1369,7 @@ export default {
       this.remove_member_form.clan_gid = newValue;
       this.change_boss_status_form.clan_gid = newValue;
       this.getClanArea();
+      this.getClanName();
       this.refreshStatus();
       localStorage.setItem("selscted_clan", this.selscted_clan);
     },
@@ -1422,8 +1424,10 @@ export default {
     } else {
       this.selscted_clan = localStorage.getItem("selscted_clan");
       this.clan_area = localStorage.getItem("clan_area");
+      this.clan_name = localStorage.getItem("clan_name");
       this.getClanArea();
       this.getClanInfo();
+      this.getClanName();
     }
     this.self_uid = localStorage.getItem("uid");
     //this.handleSubMenuSelect('1')
@@ -1562,6 +1566,22 @@ export default {
           if (resp.data.err_code == 0) {
             this.clan_area = resp.data.area;
             localStorage.setItem("clan_area",resp.data.area)
+          } else this.$router.push("/login");
+        })
+        .catch((err) => {
+          console.log(err);
+          ElMessage.error("获取信息失败，请尝试刷新页面");
+        });
+    },
+    getClanName() {
+      axios
+        .get("api/clanbattle/clan_name", {
+          params: { clan_gid: this.selscted_clan },
+        })
+        .then((resp) => {
+          if (resp.data.err_code == 0) {
+            this.clan_name = resp.data.clan_name;
+            localStorage.setItem("clan_name",resp.data.clan_name)
           } else this.$router.push("/login");
         })
         .catch((err) => {
@@ -2092,9 +2112,9 @@ export default {
         });
     },
     getFormHeight() {
-      this.record_table_height = window.innerHeight - 285.5 + "px";
-      this.status_table_height = window.innerHeight - 285.5 + "px";
-      this.subs_table_height = window.innerHeight - 274 + "px";
+      this.record_table_height = window.innerHeight - 285.5 - 50 + "px";
+      this.status_table_height = window.innerHeight - 285.5 - 50 + "px";
+      this.subs_table_height = window.innerHeight - 274 - 50 + "px";
       if (this.active_echarts != null) {
         for (let chart of this.active_echarts) {
           chart.resize();
