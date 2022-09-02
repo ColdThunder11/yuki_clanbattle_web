@@ -108,8 +108,16 @@ export default {
           description: "查询今日出刀状态，不加at则为最近5条记录",
         },
         {
+          command: "查[1-5]|(补偿)刀",
+          description: "查询指定出刀数量的成员，查补偿刀则为查询有补偿刀未出的成员",
+        },
+        {
           command: "修改进度 [1-5] [周目] [血量]",
-          description: "强制修改Boss状态",
+          description: "强制修改Boss状态（仅会战管理员）",
+        },
+        {
+          command: "催刀[0-2]",
+          description: "对出了指定刀数及以下的成员群内at提醒",
         },
         {
           command: "切换会战档案[1-10]",
@@ -118,6 +126,10 @@ export default {
         {
           command: "清空当前会战档案",
           description: "清空当前会战档案会战数据（仅会战管理员）",
+        },
+        {
+          command: "清除公会数据",
+          description: "清空当前公会和出刀数据（仅会战管理员）",
         },
         {
           command: "设置密码[密码]",
