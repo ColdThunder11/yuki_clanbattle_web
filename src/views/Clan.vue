@@ -38,7 +38,11 @@
           width="50%"
         >
           <el-form :model="report_record_form">
-            <el-form-item v-if="clan_area != 'cn'" label="Boss" :label-width="formLabelWidth">
+            <el-form-item
+              v-if="clan_area != 'cn'"
+              label="Boss"
+              :label-width="formLabelWidth"
+            >
               <el-select
                 v-model="report_record_form.target_boss"
                 placeholder="请选择挑战的Boss"
@@ -64,7 +68,11 @@
                 @keyup.enter="reportRecord"
               ></el-input>
             </el-form-item>
-            <el-form-item v-if="clan_area != 'cn'" label="上报为完整刀" :label-width="formLabelWidth">
+            <el-form-item
+              v-if="clan_area != 'cn'"
+              label="上报为完整刀"
+              :label-width="formLabelWidth"
+            >
               <el-switch
                 v-model="report_record_form.froce_use_full_chance"
               ></el-switch>
@@ -122,7 +130,11 @@
           width="50%"
         >
           <el-form :model="report_queue_form">
-            <el-form-item v-if="clan_area != 'cn'" label="Boss" :label-width="formLabelWidth">
+            <el-form-item
+              v-if="clan_area != 'cn'"
+              label="Boss"
+              :label-width="formLabelWidth"
+            >
               <el-select
                 v-model="report_queue_form.target_boss"
                 placeholder="请选择申请的Boss"
@@ -184,26 +196,48 @@
                 v-model="report_subscribe_form.target_cycle"
                 placeholder="请选择预约的周目"
               >
-                <el-option
-                  v-for="(cycle, o) in Array(
-                    100 -
-                      boss_status[Number(report_subscribe_form.target_boss) - 1]
-                        .target_cycle
-                  )
-                    .fill(
-                      boss_status[Number(report_subscribe_form.target_boss) - 1]
-                        .target_cycle
-                    )
-                    .map(
-                      (el, i) =>
+                <div v-if="clan_area != 'cn'">
+                  <el-option
+                    v-for="(cycle, o) in Array(
+                      100 -
                         boss_status[
                           Number(report_subscribe_form.target_boss) - 1
-                        ].target_cycle + i
-                    )"
-                  :key="o"
-                  :label="cycle + '周目'"
-                  :value="cycle + ''"
-                ></el-option>
+                        ].target_cycle
+                    )
+                      .fill(
+                        boss_status[
+                          Number(report_subscribe_form.target_boss) - 1
+                        ].target_cycle
+                      )
+                      .map(
+                        (el, i) =>
+                          boss_status[
+                            Number(report_subscribe_form.target_boss) - 1
+                          ].target_cycle + i
+                      )"
+                    :key="o"
+                    :label="cycle + '周目'"
+                    :value="cycle + ''"
+                  ></el-option>
+                </div>
+                <div v-if="clan_area == 'cn'">
+                  <el-option
+                    v-for="(cycle, o) in Array(
+                      100 -
+                        (Number(report_subscribe_form.target_boss) <= boss_status.target_boss ? boss_status.target_cycle + 1 : boss_status.target_cycle)
+                    )
+                      .fill(
+                        Number(report_subscribe_form.target_boss) <= boss_status.target_boss ? boss_status.target_cycle + 1 : boss_status.target_cycle
+                      )
+                      .map(
+                        (el, i) =>
+                          (Number(report_subscribe_form.target_boss) <= boss_status.target_boss ? boss_status.target_cycle + 1 : boss_status.target_cycle) + i
+                      )"
+                    :key="o"
+                    :label="cycle + '周目'"
+                    :value="cycle + ''"
+                  ></el-option>
+                </div>
               </el-select>
             </el-form-item>
             <el-form-item label="注释" :label-width="formLabelWidth">
@@ -235,7 +269,11 @@
           width="50%"
         >
           <el-form :model="report_sl_form">
-            <el-form-item v-if="clan_area != 'cn'" label="Boss" :label-width="formLabelWidth">
+            <el-form-item
+              v-if="clan_area != 'cn'"
+              label="Boss"
+              :label-width="formLabelWidth"
+            >
               <el-select
                 v-model="report_sl_form.boss"
                 placeholder="请选择SL的Boss"
@@ -393,7 +431,9 @@
             </span>
           </template>
         </el-dialog>
-        <h3 v-if="clan_name" style="text-align:center;margin-top:0px;">{{clan_name}}</h3>
+        <h3 v-if="clan_name" style="text-align: center; margin-top: 0px">
+          {{ clan_name }}
+        </h3>
         <el-menu
           default-active="1"
           class="el-menu-demo"
@@ -523,9 +563,7 @@
                     </el-progress>
                     <div v-if="in_queue_dict" style="margin: 5px 0 0 5px">
                       <div
-                        v-if="
-                          in_queue_dict[boss_status.target_boss].length > 0
-                        "
+                        v-if="in_queue_dict[boss_status.target_boss].length > 0"
                       >
                         <p
                           v-for="(queue_item, p) in in_queue_dict[
@@ -549,9 +587,7 @@
                     </div>
                     <div v-if="on_tree_dict" style="margin: 5px 0 0 5px">
                       <div
-                        v-if="
-                          on_tree_dict[boss_status.target_boss].length > 0
-                        "
+                        v-if="on_tree_dict[boss_status.target_boss].length > 0"
                       >
                         <p
                           v-for="(on_tree_item, p) in on_tree_dict[
@@ -1565,7 +1601,7 @@ export default {
         .then((resp) => {
           if (resp.data.err_code == 0) {
             this.clan_area = resp.data.area;
-            localStorage.setItem("clan_area",resp.data.area)
+            localStorage.setItem("clan_area", resp.data.area)
           } else this.$router.push("/login");
         })
         .catch((err) => {
@@ -1581,7 +1617,7 @@ export default {
         .then((resp) => {
           if (resp.data.err_code == 0) {
             this.clan_name = resp.data.clan_name;
-            localStorage.setItem("clan_name",resp.data.clan_name)
+            localStorage.setItem("clan_name", resp.data.clan_name)
           } else this.$router.push("/login");
         })
         .catch((err) => {
@@ -1907,7 +1943,7 @@ export default {
               }
               this.max_boss_cycle = max_cycle;
             }
-            else{
+            else {
               this.max_boss_cycle = this.boss_status.target_cycle;
             }
           } else this.$router.push("/login");
