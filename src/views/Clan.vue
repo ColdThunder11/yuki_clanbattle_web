@@ -64,7 +64,7 @@
                 @keyup.enter="reportRecord"
               ></el-input>
             </el-form-item>
-            <el-form-item label="上报为完整刀" :label-width="formLabelWidth">
+            <el-form-item v-if="clan_area != 'cn'" label="上报为完整刀" :label-width="formLabelWidth">
               <el-switch
                 v-model="report_record_form.froce_use_full_chance"
               ></el-switch>
@@ -1645,6 +1645,7 @@ export default {
       this.disable_api_call = true;
       if (this.clan_area == "cn") {
         this.report_record_form.target_boss = this.boss_status.target_boss.toString()
+        this.report_record_form.froce_use_full_chance = false
       }
       if (!this.report_record_form.target_boss) {
         ElMessage.error("请选择挑战的Boss");
