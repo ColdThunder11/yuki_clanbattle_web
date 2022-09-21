@@ -541,11 +541,11 @@
                 <el-col :span="14">
                   <el-card class="box-card">
                     <p style="margin: 0 0 0 2px">
-                      {{ parseInt(boss_status.target_boss) }}王
+                      {{ parseInt(boss_status.target_cycle) }}周目
                     </p>
                     <br />
                     <p style="margin: 0px 0 0 10px">
-                      {{ parseInt(boss_status.target_cycle) }}周目
+                      {{ parseInt(boss_status.target_boss) }}王
                     </p>
                     <el-progress
                       :text-inside="true"
