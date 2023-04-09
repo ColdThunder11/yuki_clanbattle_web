@@ -39,7 +39,6 @@
         >
           <el-form :model="report_record_form">
             <el-form-item
-              v-if="clan_area != 'cn'"
               label="Boss"
               :label-width="formLabelWidth"
             >
@@ -69,7 +68,6 @@
               ></el-input>
             </el-form-item>
             <el-form-item
-              v-if="clan_area != 'cn'"
               label="上报为完整刀"
               :label-width="formLabelWidth"
             >
@@ -131,7 +129,6 @@
         >
           <el-form :model="report_queue_form">
             <el-form-item
-              v-if="clan_area != 'cn'"
               label="Boss"
               :label-width="formLabelWidth"
             >
@@ -196,7 +193,7 @@
                 v-model="report_subscribe_form.target_cycle"
                 placeholder="请选择预约的周目"
               >
-                <div v-if="clan_area != 'cn'">
+                <div>
                   <el-option
                     v-for="(cycle, o) in Array(
                       100 -
@@ -214,24 +211,6 @@
                           boss_status[
                             Number(report_subscribe_form.target_boss) - 1
                           ].target_cycle + i
-                      )"
-                    :key="o"
-                    :label="cycle + '周目'"
-                    :value="cycle + ''"
-                  ></el-option>
-                </div>
-                <div v-if="clan_area == 'cn'">
-                  <el-option
-                    v-for="(cycle, o) in Array(
-                      100 -
-                        (Number(report_subscribe_form.target_boss) <= boss_status.target_boss ? boss_status.target_cycle + 1 : boss_status.target_cycle)
-                    )
-                      .fill(
-                        Number(report_subscribe_form.target_boss) <= boss_status.target_boss ? boss_status.target_cycle + 1 : boss_status.target_cycle
-                      )
-                      .map(
-                        (el, i) =>
-                          (Number(report_subscribe_form.target_boss) <= boss_status.target_boss ? boss_status.target_cycle + 1 : boss_status.target_cycle) + i
                       )"
                     :key="o"
                     :label="cycle + '周目'"
@@ -270,7 +249,6 @@
         >
           <el-form :model="report_sl_form">
             <el-form-item
-              v-if="clan_area != 'cn'"
               label="Boss"
               :label-width="formLabelWidth"
             >
@@ -450,7 +428,7 @@
         <div class="line"></div>
         <div v-if="active_enum_select == 1">
           <div v-if="boss_status" class="main-content-div">
-            <div v-if="clan_area != 'cn'">
+            <div>
               <el-row justify="center" :gutter="15">
                 <el-col
                   v-for="(boss_item, o) in boss_status"
@@ -532,92 +510,6 @@
                           </p>
                         </div>
                       </div>-->
-                  </el-card>
-                </el-col>
-              </el-row>
-            </div>
-            <div v-if="clan_area == 'cn'">
-              <el-row justify="center" :gutter="15">
-                <el-col :span="14">
-                  <el-card class="box-card">
-                    <p style="margin: 0 0 0 2px">
-                      {{ parseInt(boss_status.target_cycle) }}周目
-                    </p>
-                    <br />
-                    <p style="margin: 0px 0 0 10px">
-                      {{ parseInt(boss_status.target_boss) }}王
-                    </p>
-                    <el-progress
-                      :text-inside="true"
-                      :stroke-width="20"
-                      :percentage="
-                        (boss_status.boss_hp / boss_status.max_boss_hp) * 100
-                      "
-                      status="exception"
-                    >
-                      <span style="text-align: center"
-                        >{{ parseInt(boss_status.boss_hp) }}/{{
-                          parseInt(boss_status.max_boss_hp)
-                        }}</span
-                      >
-                    </el-progress>
-                    <div v-if="in_queue_dict" style="margin: 5px 0 0 5px">
-                      <div
-                        v-if="in_queue_dict[boss_status.target_boss].length > 0"
-                      >
-                        <p
-                          v-for="(queue_item, p) in in_queue_dict[
-                            boss_status.target_boss
-                          ]"
-                          :key="p"
-                        >
-                          {{ getMemberUname(queue_item.member_uid) }}正在挑战中
-                          <span
-                            v-if="
-                              !(
-                                queue_item.comment == null ||
-                                queue_item.comment == ''
-                              )
-                            "
-                          >
-                            ：备注{{ queue_item.comment }}
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-                    <div v-if="on_tree_dict" style="margin: 5px 0 0 5px">
-                      <div
-                        v-if="on_tree_dict[boss_status.target_boss].length > 0"
-                      >
-                        <p
-                          v-for="(on_tree_item, p) in on_tree_dict[
-                            boss_status.target_boss
-                          ]"
-                          :key="p"
-                        >
-                          {{
-                            getMemberUname(on_tree_item.member_uid)
-                          }}还挂在树上
-                          <span
-                            v-if="
-                              !(
-                                on_tree_item.comment == null ||
-                                on_tree_item.comment == ''
-                              )
-                            "
-                          >
-                            ：备注{{ on_tree_item.comment }}
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-                    <!--<div v-if="on_tree_dict" style="margin: 5px 0 0 5px">
-                    <div v-if="on_tree_uname_list[parseInt(o)] != '-None'">
-                      <p>
-                        {{ on_tree_uname_list[parseInt(o)] }}
-                      </p>
-                    </div>
-                  </div>-->
                   </el-card>
                 </el-col>
               </el-row>
@@ -861,7 +753,7 @@
                   >
                     待出刀
                   </span>
-                </template>
+                </template> 
               </el-table-column>
             </el-table-column>
             <el-table-column label="第二刀" align="center">
@@ -1648,9 +1540,6 @@ export default {
     },
     reportQueue() {
       this.disable_api_call = true;
-      if (this.clan_area == "cn") {
-        this.report_queue_form.target_boss = this.boss_status.target_boss.toString()
-      }
       if (!this.report_queue_form.target_boss) {
         ElMessage.error("请选择挑战的Boss");
         this.disable_api_call = false;
@@ -1679,10 +1568,6 @@ export default {
     },
     reportRecord() {
       this.disable_api_call = true;
-      if (this.clan_area == "cn") {
-        this.report_record_form.target_boss = this.boss_status.target_boss.toString()
-        this.report_record_form.froce_use_full_chance = false
-      }
       if (!this.report_record_form.target_boss) {
         ElMessage.error("请选择挑战的Boss");
         this.disable_api_call = false;
@@ -1783,9 +1668,6 @@ export default {
     },
     reportSL() {
       this.disable_api_call = true;
-      if (this.clan_area == "cn") {
-        this.report_sl_form.boss = this.boss_status.target_boss.toString()
-      }
       if (!this.report_sl_form.boss) {
         ElMessage.error("请选择SL的Boss");
         this.disable_api_call = false;
@@ -1935,17 +1817,12 @@ export default {
         .then((resp) => {
           if (resp.data.err_code == 0) {
             this.boss_status = resp.data.boss_status;
-            if (this.clan_area != "cn") {
-              let max_cycle = 1;
-              for (let status of resp.data.boss_status) {
-                if (status.target_cycle > max_cycle)
-                  max_cycle = status.target_cycle;
-              }
-              this.max_boss_cycle = max_cycle;
+            let max_cycle = 1;
+            for (let status of resp.data.boss_status) {
+              if (status.target_cycle > max_cycle)
+                max_cycle = status.target_cycle;
             }
-            else {
-              this.max_boss_cycle = this.boss_status.target_cycle;
-            }
+            this.max_boss_cycle = max_cycle;
           } else this.$router.push("/login");
         })
         .catch((err) => {
