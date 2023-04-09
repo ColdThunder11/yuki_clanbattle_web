@@ -5,9 +5,11 @@
       <p align="left">
         Yuki Clanbattle建设中 <a href="https://github.com/ColdThunder11/yuki_clanbattle">Github地址</a>
       </p>
-      <p align="left">当前版本：v0.2.1</p>
+      <p align="left">当前版本：v0.2.1-cn</p>
       <p align="left">
         Change Log: <br />
+        v0.2.1-cn<br />
+        国服使用新会战模式<br />
         v0.2.1<br />
         修改：修改了预约逻辑，如果预约的Boss当前可挑战默认预约下一周目的Boss<br />
         修正：预约提醒遗漏<br />
